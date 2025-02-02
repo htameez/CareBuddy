@@ -2,14 +2,14 @@ import { View, Text } from 'react-native'
 import React from 'react'
 import GradientBackground from "../../components/GradientBackground";
 
-const Home = () => {
+const Chats = () => {
   return (
     <GradientBackground>
       <View>
-        <Text>Home</Text>
+        <Text>Chats</Text>
       </View>
     </GradientBackground>
   )
 }
 
-export default Home
+export default Chats

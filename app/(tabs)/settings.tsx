@@ -1,11 +1,14 @@
 import { View, Text } from 'react-native'
 import React from 'react'
+import GradientBackground from "../../components/GradientBackground";
 
 const Settings = () => {
   return (
-    <View>
-      <Text>Settings</Text>
-    </View>
+    <GradientBackground>
+      <View>
+        <Text>Settings</Text>
+      </View>
+    </GradientBackground>
   )
 }
 
