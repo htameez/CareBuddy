@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import images from "../constants/images";
 import ArrowButton from "../components/ArrowButton/ArrowButton"; // Adjust path if needed
 
-const { height } = Dimensions.get("window"); // Get screen height
+const { height, width } = Dimensions.get("window"); // Get screen height & width
 
 const App: React.FC = () => {
   const router = useRouter();
@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const translateY3 = useSharedValue(20);
 
   const glowOpacity = useSharedValue(0); // 🌟 Glow starts invisible
+  const buttonTranslateX = useSharedValue(width); // ✅ Start button off-screen (right)
 
   useEffect(() => {
     // Animate each message like a text message appearing
@@ -35,6 +36,9 @@ const App: React.FC = () => {
 
     // 🌟 Glow fades in smoothly
     glowOpacity.value = withTiming(1, { duration: 1500, easing: Easing.out(Easing.ease) });
+
+    // ✅ Slide-in Button Animation
+    buttonTranslateX.value = withDelay(7000, withTiming(0, { duration: 1000, easing: Easing.out(Easing.ease) }));
 
   }, []);
 
@@ -59,12 +63,17 @@ const App: React.FC = () => {
     opacity: glowOpacity.value,
   }));
 
+  // ✅ Animated style for Button Slide-In
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: buttonTranslateX.value }],
+  }));
+
   return (
     <View className="flex-1 relative">
       <SafeAreaView className="flex-1">
         <ScrollView contentContainerStyle={{ height: "100%" }}>
           <View className="w-full flex justify-start items-center h-full relative">
-            <Text className="font-pregular text-white text-3xl pt-10">Welcome to CareBuddy</Text>
+            <Text className="font-psemibold text-white text-3xl pt-10">Welcome to CareBuddy</Text>
 
             <View className="w-full h-3/5 max-h-[400px] items-end pr-8 pt-16 md:pt-24">
               {/* Animated Messages */}
@@ -80,8 +89,6 @@ const App: React.FC = () => {
                 <Image source={images.message3} className="w-72 h-24" resizeMode="contain" />
               </Animated.View>
             </View>
-            {/* ✅ Arrow Button with Navigation */}
-            <ArrowButton text="Get Started" onPress={() => router.push("/(auth)/sign-in")} />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -93,6 +100,11 @@ const App: React.FC = () => {
           className="w-full h-full"
           resizeMode="cover"
         />
+      </Animated.View>
+
+      {/* ✅ Animated Button Positioned at Bottom Right */}
+      <Animated.View style={animatedButtonStyle} className="absolute bottom-40 right-10">
+        <ArrowButton text="Get Started" handlePress={() => router.push("/sign-in")} isDisabled={false} />
       </Animated.View>
     </View>
   );
