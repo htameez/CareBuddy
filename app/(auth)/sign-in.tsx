@@ -1,11 +1,15 @@
-import { View, Text, ScrollView, Dimensions, Image } from "react-native";
+import { View, Text, Dimensions, Image, KeyboardAvoidingView, Platform } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import FormField from "@/components/FormField";
-import images from "../../constants/images";
+import SocialLoginButtons from "@/components/SocialLoginButtons";
+import icons from "../../constants/icons";
+import { Link } from "expo-router";
+import auth from '@react-native-firebase/auth';
 
-const { width } = Dimensions.get("window"); // Get screen width for centering
+const { width, height } = Dimensions.get("window");
 
 const SignIn = () => {
   const [form, setForm] = useState({
@@ -18,22 +22,27 @@ const SignIn = () => {
       {/* ✅ Background Gradient Positioned Correctly */}
       <LinearGradient
         colors={["#3389BB", "rgba(35, 105, 146, 0.12)", "rgba(51, 137, 187, 0.00)"]}
-        locations={[0, 0.7763, 1]} // Gradient stops
+        locations={[0, 0.7763, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={{
           position: "absolute",
-          width: 237, // Fixed width
-          height: 544, // Fixed height
-          top: 0, // Positioned at the top
-          left: (width - 237) / 2, // Centers the gradient horizontally
+          width: 237,
+          height: 544,
+          top: 0,
+          left: (width - 237) / 2,
         }}
       />
 
       <SafeAreaView className="flex-1">
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="w-full flex justify-start items-center h-full relative">
-            {/* ✅ Text Positioned on Top of Gradient */}
+        <KeyboardAwareScrollView
+          extraScrollHeight={100} // Adjust scrolling height to prevent top cutoff
+          enableOnAndroid={true} // Ensures it works smoothly on Android
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <View className="w-full flex-1 justify-between items-center h-full relative px-4">
+            {/* ✅ Title Positioned on Top */}
             <View className="w-full flex justify-start items-center pt-[10px]">
               <Text className="font-psemibold text-white text-[36px]">Login</Text>
               <Text className="font-iregular text-white text-[16px] pt-[4px]">
@@ -41,27 +50,42 @@ const SignIn = () => {
               </Text>
             </View>
 
-            {/* ✅ Form Fields with Icons */}
-            <View className="w-full flex items-center justify-center mt-8 px-4">
+            {/* ✅ Form Fields Positioned Near the Bottom */}
+            <View className="w-full flex items-center justify-end gap-y-5 pb-[45px]">
               <FormField
                 placeholder="Email"
                 value={form.email}
                 handleChangeText={(e) => setForm({ ...form, email: e })}
-                otherStyles="w-[338px] mt-7"
+                otherStyles="w-[338px]"
                 keyboardType="email-address"
-                icon={images.userIcon} // 👤 User icon
+                autoCapitalize="none"
+                icon={icons.user} 
               />
               <FormField
                 placeholder="Password"
                 value={form.password}
                 handleChangeText={(e) => setForm({ ...form, password: e })}
-                otherStyles="w-[338px] mt-5"
+                otherStyles="w-[338px]"
                 secureTextEntry
-                icon={images.lockIcon} // 🔒 Lock icon
+                icon={icons.lock} 
               />
+              <View className="flex-row items-center w-full justify-center mt-6">
+                <View className="w-[80px] h-[1px] bg-white" />
+                <Text className="text-white text-lg font-iregular mx-3">Or Login With</Text>
+                <View className="w-[80px] h-[1px] bg-white" />
+              </View>
+              <SocialLoginButtons />
+              <View className="flex justify-center pt-4 flex-row gap-1">
+                <Text className="text-lg text-white font-pregular">
+                  Don't have an account?
+                </Text>
+                <Link href="/sign-up" className="text-lg font-psemibold text-white">
+                  Register
+                </Link>
+              </View>
             </View>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </View>
   );

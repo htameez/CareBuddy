@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "568471222853",
+    "project_id": "carebuddy-cdd43",
+    "storage_bucket": "carebuddy-cdd43.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568471222853:android:24c21b7ca1f32780e1412c",
+        "android_client_info": {
+          "package_name": "com.carebuddy.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568471222853-h25op7hbjfilf0h42kg7gdpqp66un8e3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.carebuddy.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "568471222853-mg3gi9s228gqs1cdhm7fcbtm4hkm0hsk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCej9M0_vD6prglxGJiq_PIzA3MHzXndu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568471222853-mg3gi9s228gqs1cdhm7fcbtm4hkm0hsk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "568471222853-tma7pm7b2r4bigrdmtpsms6epokp24un.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.carebuddy.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

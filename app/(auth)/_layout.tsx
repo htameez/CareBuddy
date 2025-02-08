@@ -1,7 +1,7 @@
-import { Image, ScrollView, Text, View, Dimensions } from "react-native";
+import { Image, View, Dimensions } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from 'react'
+import React from "react";
 import images from "../../constants/images";
 import GradientBackground from "../../components/GradientBackground";
 
@@ -31,17 +31,24 @@ const AuthLayout = () => {
             }}
           />
         </Stack>
-        <View style={{ height: height * 0.4 }} className="absolute bottom-0 left-0 right-0">
+
+        {/* ✅ Glow Effect Positioned Behind Everything */}
+        <View
+          style={{ height: height * 0.4 }}
+          className="absolute bottom-0 left-0 right-0 -z-10" // 👈 Pushes it to the background
+          pointerEvents="none" // 👈 Prevents it from blocking interactions
+        >
           <Image
             source={images.glow}
             className="w-full h-full"
             resizeMode="cover"
           />
         </View>
+
         <StatusBar backgroundColor="#161622" style="light" />
       </GradientBackground>
     </>
   );
-}
+};
 
-export default AuthLayout
+export default AuthLayout;
