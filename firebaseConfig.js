@@ -7,7 +7,8 @@ import {
   FIREBASE_PROJECT_ID,
   FIREBASE_STORAGE_BUCKET,
   FIREBASE_MESSAGING_SENDER_ID,
-  FIREBASE_APP_ID
+  FIREBASE_APP_ID_IOS,
+  FIREBASE_APP_ID_ANDROID
 } from "@env"; // Importing from .env file
 
 const firebaseConfig = {
@@ -16,7 +17,9 @@ const firebaseConfig = {
   projectId: FIREBASE_PROJECT_ID,
   storageBucket: FIREBASE_STORAGE_BUCKET,
   messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
-  appId: FIREBASE_APP_ID
+  appId: Platform.OS === 'ios' 
+  ? FIREBASE_APP_ID_IOS 
+  : FIREBASE_APP_ID_ANDROID,
 };
 
 // Initialize Firebase

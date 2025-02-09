@@ -1,5 +1,5 @@
-import { View, Text, Dimensions, Image, KeyboardAvoidingView, Platform, Alert } from "react-native";
-import React, { useState } from "react";
+import { View, Text, Dimensions, Alert, TextInput, ActivityIndicator } from "react-native";
+import React, { useState, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -9,7 +9,7 @@ import icons from "../../constants/icons";
 import { Link, useRouter } from "expo-router"; // ✅ Import router for redirection
 import auth from "@react-native-firebase/auth";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const SignUp = () => {
   const router = useRouter();
@@ -20,6 +20,11 @@ const SignUp = () => {
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+
+  // ✅ Refs for input navigation
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   // ✅ Sign-Up Function
   const handleSignUp = async () => {
@@ -83,52 +88,75 @@ const SignUp = () => {
             </View>
 
             {/* ✅ Form Fields */}
-            <View className="w-full flex items-center justify-end gap-y-5 pb-[45px]">
+            <View className="w-full flex items-center justify-end gap-y-5 pb-[12%]">
               <FormField
                 placeholder="Full Name"
                 value={form.name}
                 handleChangeText={(e) => setForm({ ...form, name: e })}
-                otherStyles="w-[338px]"
+                otherStyles="w-[90%]"
                 icon={icons.user}
+                returnKeyType="next"
+                onSubmitEditing={() => emailRef.current?.focus()} // ✅ Move to email field
+                blurOnSubmit={false}
               />
+
               <FormField
                 placeholder="Email"
                 value={form.email}
                 handleChangeText={(e) => setForm({ ...form, email: e })}
-                otherStyles="w-[338px]"
+                otherStyles="w-[90%]"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 icon={icons.user}
+                ref={emailRef}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()} // ✅ Move to password field
+                blurOnSubmit={false}
               />
+
               <FormField
                 placeholder="Password"
                 value={form.password}
                 handleChangeText={(e) => setForm({ ...form, password: e })}
-                otherStyles="w-[338px]"
+                otherStyles="w-[90%]"
                 secureTextEntry
                 icon={icons.lock}
+                ref={passwordRef}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()} // ✅ Move to confirm password
+                blurOnSubmit={false}
               />
+
               <FormField
                 placeholder="Confirm Password"
                 value={form.confirmPassword}
                 handleChangeText={(e) => setForm({ ...form, confirmPassword: e })}
-                otherStyles="w-[338px]"
+                otherStyles="w-[90%]"
                 secureTextEntry
                 icon={form.password === form.confirmPassword && form.password !== "" ? icons.checkmark : icons.lock} // ✅ Check if passwords match
+                ref={confirmPasswordRef}
+                returnKeyType="done"
+                onSubmitEditing={handleSignUp} // ✅ Submit form on return
               />
+
               {/* ✅ Register Button */}
-              <View className="w-[338px]">
-                <Text
-                  onPress={handleSignUp}
-                  className="text-center text-lg font-psemibold text-white bg-primaryLight py-3 rounded-lg"
-                >
-                  {loading ? "Registering..." : "Register"}
-                </Text>
-              </View>
+              {loading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <View className="w-[90%]">
+                  <Text
+                    onPress={handleSignUp}
+                    className="text-center text-lg font-psemibold text-white bg-primaryLight py-3 rounded-lg"
+                  >
+                    {loading ? "Registering..." : "Register"}
+                  </Text>
+                </View>
+              )}
+
               <View className="flex-row items-center w-full justify-center mt-6">
-                <View className="w-[80px] h-[1px] bg-white" />
+                <View className="w-[21.5%] h-[1px] bg-white" />
                 <Text className="text-white text-lg font-iregular mx-3">Or Register With</Text>
-                <View className="w-[80px] h-[1px] bg-white" />
+                <View className="w-[21.5%] h-[1px] bg-white" />
               </View>
               <SocialLoginButtons />
 
