@@ -40,80 +40,90 @@ const RootLayout = () => {
     }
   }, [fontsLoaded, error]);
 
-  // ✅ Check if onboarding is completed
   useEffect(() => {
     const checkOnboarding = async () => {
+      // ✅ Reset onboarding in dev mode
+      if (__DEV__) {
+        await AsyncStorage.removeItem("onboardingCompleted");
+        console.log("🔄 Dev Mode: Reset onboarding state.");
+      }
+  
       const hasCompleted = await AsyncStorage.getItem("onboardingCompleted");
       setOnboardingCompleted(hasCompleted === "true");
     };
+  
     checkOnboarding();
-  }, []);
+  }, []);  
 
-  // ✅ Listen for authentication state changes
-  useEffect(() => {
-    const subscriber = auth().onAuthStateChanged((user) => {
-      if (user) {
-        setUser(user);
-        setIsNewUser(user.metadata.creationTime === user.metadata.lastSignInTime);
+// ✅ Listen for authentication state changes
+useEffect(() => {
+  const subscriber = auth().onAuthStateChanged((user) => {
+    if (user) {
+      setUser(user);
+      setIsNewUser(user.metadata.creationTime === user.metadata.lastSignInTime);
+    } else {
+      setUser(null);
+      setIsNewUser(false);
+    }
+    if (initializing) setInitializing(false);
+  });
+
+  return subscriber;
+}, []);
+
+// ✅ Delay navigation to avoid "navigate before mounting" error
+useEffect(() => {
+  if (initializing || onboardingCompleted === null) return;
+
+  const inAuthGroup = segments[0] === "(auth)";
+
+  setTimeout(async () => {
+    if (!onboardingCompleted) {
+      return; // ✅ Stay on onboarding (`index.tsx`)
+    } 
+    
+    if (user) {
+      if (isNewUser) {
+        await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Save onboarding state
+        router.replace("/home"); // ✅ Redirect new users to home
+      } else if (!user.emailVerified) {
+        auth().signOut();
+        router.replace("/sign-in");
+        alert("Please verify your email before logging in.");
       } else {
-        setUser(null);
-        setIsNewUser(false);
+        await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Ensure onboarding is marked complete
+        router.replace("/home"); // ✅ Redirect authenticated users to home
       }
-      if (initializing) setInitializing(false);
-    });
+    } else if (!user && !inAuthGroup) {
+      router.replace("/sign-in"); // ✅ Redirect logged-out users to sign-in
+    }
+  }, 500);
+}, [user, initializing, isNewUser, onboardingCompleted]);
 
-    return subscriber;
-  }, []);
-
-  // ✅ Delay navigation to avoid "navigate before mounting" error
-  useEffect(() => {
-    if (initializing || onboardingCompleted === null) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    setTimeout(() => {
-      if (!onboardingCompleted) {
-        return; // ✅ Stay on onboarding (`index.tsx`)
-      } else if (user) {
-        if (isNewUser) {
-          router.replace("/home"); // ✅ Redirect new users to home
-        } else if (!user.emailVerified) {
-          auth().signOut();
-          router.replace("/sign-in");
-          alert("Please verify your email before logging in.");
-        } else {
-          router.replace("/home"); // ✅ Redirect authenticated users to home
-        }
-      } else if (!user && !inAuthGroup) {
-        router.replace("/sign-in"); // ✅ Redirect logged-out users to sign-in
-      }
-    }, 500);
-  }, [user, initializing, isNewUser, onboardingCompleted]);
-
-  // ✅ Show loading screen while checking auth state
-  if (!fontsLoaded || initializing || onboardingCompleted === null) {
-    return (
-      <View className="flex-1 justify-center items-center bg-black">
-        <ActivityIndicator size="large" color="white" />
-      </View>
-    );
-  }
-
+// ✅ Show loading screen while checking auth state
+if (!fontsLoaded || initializing || onboardingCompleted === null) {
   return (
-    <GradientBackground>
-      <Stack
-        screenOptions={{
-          contentStyle: {
-            backgroundColor: "transparent",
-          },
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-    </GradientBackground>
+    <View className="flex-1 justify-center items-center bg-black">
+      <ActivityIndicator size="large" color="white" />
+    </View>
   );
+}
+
+return (
+  <GradientBackground>
+    <Stack
+      screenOptions={{
+        contentStyle: {
+          backgroundColor: "transparent",
+        },
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
+  </GradientBackground>
+);
 };
 
 export default RootLayout;
