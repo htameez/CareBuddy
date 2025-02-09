@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%", // ✅ Ensures the tab bar spans the full width of the screen
     height: 105, // ✅ Maintains height
-    borderRadius: 50, // ✅ Ensures rounded edges
+    borderRadius: 40, // ✅ Ensures rounded edges
     backgroundColor: "transparent",
     borderTopWidth: 0,
     elevation: 0,
@@ -97,12 +97,12 @@ const styles = StyleSheet.create({
   gradientWrapper: {
     width: "100%", // ✅ Makes the gradient span the full width dynamically
     height: 105,
-    borderRadius: 50,
+    borderRadius: 40,
     overflow: "hidden",
   },
   gradientBackground: {
     flex: 1,
-    borderRadius: 50,
+    borderRadius: 40,
   },
   iconWrapper: {
     marginBottom: -50, // ✅ Moves icons slightly lower but prevents clipping
