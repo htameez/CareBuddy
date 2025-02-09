@@ -1,9 +1,11 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
+
+const { width } = Dimensions.get("window"); // Get screen width dynamically
 
 interface TabIconProps {
   icon: string;
@@ -14,7 +16,7 @@ interface TabIconProps {
 
 const TabIcon: React.FC<TabIconProps> = ({ icon, color, focused, library = "Entypo" }) => {
   return (
-    <View style={styles.iconWrapper}> 
+    <View style={styles.iconWrapper}>
       {library === "Entypo" ? (
         <Entypo name={icon as keyof typeof Entypo.glyphMap} size={32} color={focused ? "white" : "#B0C4DE"} />
       ) : (
@@ -34,7 +36,7 @@ const TabsLayout: React.FC = () => {
         tabBarBackground: () => (
           <View style={styles.gradientWrapper}>
             <LinearGradient
-              colors={["#1D5B8F", "rgba(29, 91, 143, 0.3)"]} 
+              colors={["#1D5B8F", "rgba(29, 91, 143, 0.3)"]}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 1 }}
               style={styles.gradientBackground}
@@ -79,24 +81,22 @@ const TabsLayout: React.FC = () => {
   );
 };
 
-// ✅ Ensures the tab bar stays at the **bottom**, is `390x105`, and properly aligned
+// ✅ Updated styles for consistent positioning
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
-    bottom: 0, // ✅ Keeps it fully at the bottom
-    left: 0,
-    right: 0,
-    height: 105, // ✅ Exact height
-    width: 390, // ✅ Exact width
-    borderRadius: 50, // ✅ Maintains rounded corners
+    bottom: 0,
+    width: "100%", // ✅ Ensures the tab bar spans the full width of the screen
+    height: 105, // ✅ Maintains height
+    borderRadius: 50, // ✅ Ensures rounded edges
     backgroundColor: "transparent",
     borderTopWidth: 0,
     elevation: 0,
     alignItems: "center",
   },
   gradientWrapper: {
-    width: 390, // ✅ Matches tabBar width
-    height: 105, // ✅ Matches tabBar height
+    width: "100%", // ✅ Makes the gradient span the full width dynamically
+    height: 105,
     borderRadius: 50,
     overflow: "hidden",
   },
