@@ -6,9 +6,10 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import FormField from "@/components/FormField";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 import icons from "../../constants/icons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { FirebaseError } from "firebase/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
@@ -26,13 +27,14 @@ const SignIn = () => {
     setLoading(true);
     try {
       await auth().signInWithEmailAndPassword(form.email, form.password);
+      await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Mark onboarding as completed
+      router.replace("/home"); // ✅ Redirect to home
     } catch (e: any) {
-      const err = e as FirebaseError;
-      alert("Sign in failed: " + err.message);
+      alert("Sign in failed: " + e.message);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <View className="flex-1 relative">
@@ -56,7 +58,7 @@ const SignIn = () => {
             <View className="w-full flex justify-start items-center pt-[10px]">
               <Text className="font-psemibold text-white text-[36px]">Login</Text>
               <Text className="font-iregular text-white text-[16px] pt-[4px]">
-                Please Login to Continue
+                Please Log In to Continue
               </Text>
             </View>
 
@@ -94,14 +96,14 @@ const SignIn = () => {
                     onPress={signIn}
                     className="text-center text-lg font-psemibold text-white bg-primaryLight py-3 rounded-lg"
                   >
-                    Sign In
+                    Log In
                   </Text>
                 </View>
               )}
 
               <View className="flex-row items-center w-full justify-center mt-6">
                 <View className="w-[21.5%] h-[1px] bg-white" />
-                <Text className="text-white text-lg font-iregular mx-3">Or Login With</Text>
+                <Text className="text-white text-lg font-iregular mx-3">Or Log In With</Text>
                 <View className="w-[21.5%] h-[1px] bg-white" />
               </View>
 

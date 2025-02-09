@@ -81,31 +81,37 @@ const TabsLayout: React.FC = () => {
   );
 };
 
-// ✅ Updated styles for consistent positioning
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
     bottom: 0,
-    width: "100%", // ✅ Ensures the tab bar spans the full width of the screen
-    height: 105, // ✅ Maintains height
-    borderRadius: 40, // ✅ Ensures rounded edges
+    width: "100%", 
+    height: 105,
+    borderTopLeftRadius: 40,  // ✅ Keep the top rounded
+    borderTopRightRadius: 40, // ✅ Keep the top rounded
+    borderBottomLeftRadius: 0, // ❌ Remove bottom rounding
+    borderBottomRightRadius: 0, // ❌ Remove bottom rounding
     backgroundColor: "transparent",
     borderTopWidth: 0,
     elevation: 0,
     alignItems: "center",
   },
   gradientWrapper: {
-    width: "100%", // ✅ Makes the gradient span the full width dynamically
+    width: "100%",
     height: 105,
-    borderRadius: 40,
+    borderTopLeftRadius: 40,  // ✅ Keep the top rounded
+    borderTopRightRadius: 40, // ✅ Keep the top rounded
+    borderBottomLeftRadius: 0, // ❌ Remove bottom rounding
+    borderBottomRightRadius: 0, // ❌ Remove bottom rounding
     overflow: "hidden",
   },
   gradientBackground: {
     flex: 1,
-    borderRadius: 40,
+    borderTopLeftRadius: 40,  // ✅ Keep the top rounded
+    borderTopRightRadius: 40, // ✅ Keep the top rounded
   },
   iconWrapper: {
-    marginBottom: -50, // ✅ Moves icons slightly lower but prevents clipping
+    marginBottom: -50, 
     alignItems: "center",
     justifyContent: "center",
   },
