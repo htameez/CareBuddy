@@ -1,76 +1,73 @@
 import { View, Text, StyleSheet, Image, TextInput } from "react-native";
 import React from "react";
 import GradientBackground from "../../components/GradientBackground";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Home = () => {
   return (
-    <GradientBackground style={styles.gradientBackground}>
+    <GradientBackground>
       <View style={styles.container}>
-        {/* Profile Section */}
-        <View style={styles.profileContainer}>
-          <Image
-            source={require("../../assets/images/Home/Ellipse4.png")}
-            style={styles.profileImage}
-          />
-          <View>
-            <Text style={styles.welcomeText}>Welcome Back,</Text>
-            <Text style={styles.userName}>Vaishag P Biju</Text>
+        <SafeAreaView>
+          {/* Profile Section */}
+          <View style={styles.profileContainer}>
+            <Image
+              source={require("../../assets/images/Home/Ellipse4.png")}
+              style={styles.profileImage}
+            />
+            <View>
+              <Text style={styles.welcomeText}>Welcome Back,</Text>
+              <Text style={styles.userName}>Vaishag P Biju</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Text Wrapped Around Baymax */}
-        <View style={styles.textWrapper}>
-          <View style={styles.textContainer}>
-            <Text style={styles.greetingText}>
-              Hi <Text style={styles.boldText}>Vaishag</Text>,
-            </Text>
-            <Text style={styles.infoText}>
-              Your <Text style={styles.link}>Personal Healthcare</Text>{" "}
-              Companion is Here!
-            </Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.boldText}>
-                Informed answers, Friendly Conversation
-              </Text>{" "}
-              and
-              <Text style={styles.boldText}> Personalized Assistance</Text> are
-              assured by me.
-            </Text>
+          {/* Text Wrapped Around Baymax */}
+          <View style={styles.textWrapper}>
+            <View style={styles.textContainer}>
+              <Text style={styles.greetingText}>
+                Hi <Text style={styles.boldText}>Vaishag</Text>,
+              </Text>
+              <Text style={styles.infoText}>
+                Your <Text style={styles.link}>Personal Healthcare</Text>{" "}
+                Companion is Here!
+              </Text>
+              <Text style={styles.infoText}>
+                <Text style={styles.boldText}>
+                  Informed answers, Friendly Conversation
+                </Text>{" "}
+                and
+                <Text style={styles.boldText}> Personalized Assistance</Text> are
+                assured by me.
+              </Text>
+            </View>
+            {/* Baymax Image */}
+            <Image
+              source={require("../../assets/images/baymax/waving.png")}
+              style={styles.baymaxImage}
+              resizeMode="contain"
+            />
           </View>
-          {/* Baymax Image */}
-          <Image
-            source={require("../../assets/images/baymax/waving.png")}
-            style={styles.baymaxImage}
-            resizeMode="contain"
-          />
-        </View>
 
-        {/* Help Text */}
-        <Text style={styles.helpText}>How can I help you?</Text>
+          {/* Help Text */}
+          <Text style={styles.helpText}>How can I help you?</Text>
 
-        {/* Message Input */}
-        <View style={styles.messageInputContainer}>
-          <TextInput
-            style={styles.messageInput}
-            placeholder="Message Me"
-            placeholderTextColor="#ccc"
-          />
-          <View style={styles.sendButton}>
-            <Text style={styles.arrowUp}>↑</Text>
+          {/* Message Input */}
+          <View style={styles.messageInputContainer}>
+            <TextInput
+              style={styles.messageInput}
+              placeholder="Message Me"
+              placeholderTextColor="#ccc"
+            />
+            <View style={styles.sendButton}>
+              <Text style={styles.arrowUp}>↑</Text>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
     </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  gradientBackground: {
-    backgroundColor: "#1A1A1A",
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   container: {
     padding: 20,
     alignItems: "center",

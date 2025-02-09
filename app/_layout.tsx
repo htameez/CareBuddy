@@ -2,6 +2,8 @@ import { SplashScreen, Stack } from 'expo-router';
 import GradientBackground from "../components/GradientBackground";
 import { useFonts } from 'expo-font';
 import React, { useEffect } from "react";
+import { Platform, StatusBar } from "react-native";
+import * as NavigationBar from 'expo-navigation-bar'; // ✅ Import expo-navigation-bar
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -18,7 +20,7 @@ const RootLayout = () => {
     "Poppins-Regular": require("../assets/fonts/Poppins/Poppins-Regular.ttf"),
     "Poppins-SemiBold": require("../assets/fonts/Poppins/Poppins-SemiBold.ttf"),
     "Poppins-Thin": require("../assets/fonts/Poppins/Poppins-Thin.ttf"),
-  
+
     // Inter Fonts
     "Inter-Black": require("../assets/fonts/Inter/static/Inter-Black.ttf"),
     "Inter-Bold": require("../assets/fonts/Inter/static/Inter-Bold.ttf"),
@@ -29,15 +31,24 @@ const RootLayout = () => {
     "Inter-Regular": require("../assets/fonts/Inter/static/Inter-Regular.ttf"),
     "Inter-SemiBold": require("../assets/fonts/Inter/static/Inter-SemiBold.ttf"),
     "Inter-Thin": require("../assets/fonts/Inter/static/Inter-Thin.ttf"),
-  });  
+  });
 
   useEffect(() => {
-    if(error) throw error;
+    if (error) throw error;
 
-    if(fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded, error])
-  
-  if(!fontsLoaded && !error) return null;
+    if (fontsLoaded) SplashScreen.hideAsync();
+
+    if (Platform.OS === 'android') {
+      // ✅ Hide the status bar
+      StatusBar.setHidden(true);
+
+      // ✅ Make navigation bar fully transparent but keep gesture bar visible
+      NavigationBar.setBackgroundColorAsync("rgba(0,0,0,0)"); // Fully transparent background
+      NavigationBar.setBehaviorAsync("inset-swipe"); // Keeps the small navigation indicator at the bottom
+    }
+  }, [fontsLoaded, error]);
+
+  if (!fontsLoaded && !error) return null;
 
   return (
     <GradientBackground>
@@ -57,3 +68,4 @@ const RootLayout = () => {
 };
 
 export default RootLayout;
+
