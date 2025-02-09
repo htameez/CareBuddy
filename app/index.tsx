@@ -104,7 +104,7 @@ const App: React.FC = () => {
 
       {/* ✅ Animated Button Positioned at Bottom Right */}
       <Animated.View style={animatedButtonStyle} className="absolute bottom-40 right-10">
-        <ArrowButton text="Get Started" handlePress={() => router.push("/home")} isDisabled={false} />
+        <ArrowButton text="Get Started" handlePress={() => router.push("/sign-in")} isDisabled={false} />
       </Animated.View>
     </View>
   );

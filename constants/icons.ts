@@ -5,7 +5,8 @@ const icons = {
     eyeHide: require("../assets/images/SignIn/eye-hide.png"),
     google: require("../assets/images/SignIn/google.png"),
     facebook: require("../assets/images/SignIn/facebook.png"),
-    apple: require("../assets/images/SignIn/apple.png")
+    apple: require("../assets/images/SignIn/apple.png"),
+    checkmark: require("../assets/images/SignUp/checkmark.png")
 };
 
 export default icons;
