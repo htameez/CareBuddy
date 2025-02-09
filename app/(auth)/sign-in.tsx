@@ -107,7 +107,7 @@ const SignIn = () => {
 
               <SocialLoginButtons />
 
-              <View className="flex justify-center pt-4 flex-row gap-1">
+              <View className="flex justify-center pt-4 flex-row gap-2">
                 <Text className="text-lg text-white font-pregular">
                   Don't have an account?
                 </Text>

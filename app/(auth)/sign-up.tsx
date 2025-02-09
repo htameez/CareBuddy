@@ -160,12 +160,12 @@ const SignUp = () => {
               </View>
               <SocialLoginButtons />
 
-              <View className="flex justify-center pt-4 flex-row gap-1">
+              <View className="flex justify-center pt-4 flex-row gap-2">
                 <Text className="text-lg text-white font-pregular">
                   Already have an account?
                 </Text>
                 <Link href="/sign-in" className="text-lg font-psemibold text-white">
-                  Sign In
+                  Log In
                 </Link>
               </View>
             </View>

@@ -1,6 +1,7 @@
 import { Image, ScrollView, Text, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from "react-native-reanimated";
 import { useEffect } from "react";
 import images from "../constants/images";
@@ -10,6 +11,12 @@ const { height, width } = Dimensions.get("window"); // Get screen height & width
 
 const App: React.FC = () => {
   const router = useRouter();
+
+  // ✅ Mark onboarding as completed & go to sign-in
+  const finishOnboarding = async () => {
+    await AsyncStorage.setItem("onboardingCompleted", "true");
+    router.replace("/sign-in"); // ✅ Redirect to sign-in after onboarding
+  };
 
   // Shared values for animations
   const opacity1 = useSharedValue(0);
@@ -104,7 +111,7 @@ const App: React.FC = () => {
 
       {/* ✅ Animated Button Positioned at Bottom Right */}
       <Animated.View style={animatedButtonStyle} className="absolute bottom-40 right-10">
-        <ArrowButton text="Get Started" handlePress={() => router.push("/sign-in")} isDisabled={false} />
+        <ArrowButton text="Get Started" handlePress={finishOnboarding} isDisabled={false} />
       </Animated.View>
     </View>
   );
