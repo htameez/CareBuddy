@@ -8,8 +8,8 @@ import SocialLoginButtons from "@/components/SocialLoginButtons";
 import icons from "../../constants/icons";
 import { Link, router } from "expo-router";
 import auth from "@react-native-firebase/auth";
-import { FirebaseError } from "firebase/app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../../backend/services/api";
 
 const { width } = Dimensions.get("window");
 
@@ -26,15 +26,25 @@ const SignIn = () => {
   const signIn = async () => {
     setLoading(true);
     try {
-      await auth().signInWithEmailAndPassword(form.email, form.password);
-      await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Mark onboarding as completed
-      router.replace("/home"); // ✅ Redirect to home
+      const userCredential = await auth().signInWithEmailAndPassword(form.email, form.password);
+      const user = userCredential.user;
+  
+      // ✅ Fetch User Data from MongoDB
+      const userData = await api.getUser(user.uid);
+  
+      // ✅ Save to AsyncStorage for Quick Access
+      if (userData) {
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+      }
+  
+      await AsyncStorage.setItem("onboardingCompleted", "true");
+      router.replace("/home");
     } catch (e: any) {
       alert("Sign in failed: " + e.message);
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   return (
     <View className="flex-1 relative">

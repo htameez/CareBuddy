@@ -4,6 +4,7 @@ import { GoogleSignin, statusCodes, User } from "@react-native-google-signin/goo
 import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
 import icons from "../constants/icons";
+import axios from 'axios';
 
 // ✅ Configure Google Sign-In
 GoogleSignin.configure({
@@ -11,7 +12,7 @@ GoogleSignin.configure({
 });
 
 const SocialLoginButtons: React.FC = () => {
-  const router = useRouter(); 
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -27,24 +28,26 @@ const SocialLoginButtons: React.FC = () => {
       // ✅ Create Google credential
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
+      const user = userCredential.user;
 
-      // ✅ Redirect to Home Page after signing in
-      if (userCredential.user) {
-        router.replace("/home"); // ✅ Redirect to home
-      }
-    } catch (error: unknown) {
-      // ✅ Handle known error cases
-      if (error instanceof Error) {
-        if ((error as any).code === statusCodes.SIGN_IN_CANCELLED) {
-          Alert.alert("Cancelled", "Google sign-in was cancelled.");
-        } else if ((error as any).code === statusCodes.IN_PROGRESS) {
-          Alert.alert("Error", "Google sign-in is already in progress.");
-        } else if ((error as any).code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          Alert.alert("Error", "Google Play Services are not available.");
-        } else {
-          Alert.alert("Error", `Google Sign-In failed: ${error.message}`);
-        }
-      }
+      // ✅ Fetch the Firebase Auth Token
+      const firebaseToken = await user.getIdToken();
+
+      // ✅ Send User Info to Backend with Auth Header
+      await axios.post('http://localhost:5001/api/users', {
+        firebaseUID: user.uid,
+        name: user.displayName,
+        email: user.email,
+      }, {
+        headers: {
+          Authorization: `Bearer ${firebaseToken}`,  // ✅ Correct Token Header
+        },
+      });
+
+      router.replace("/home");
+
+    } catch (error : any) {
+      Alert.alert("Error", `Google Sign-In failed: ${error.message}`);
     }
   };
 

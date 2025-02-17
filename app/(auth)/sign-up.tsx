@@ -6,8 +6,10 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import FormField from "@/components/FormField";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 import icons from "../../constants/icons";
-import { Link, useRouter } from "expo-router"; // ✅ Import router for redirection
+import { Link, useRouter } from "expo-router";
 import auth from "@react-native-firebase/auth";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from "../../backend/services/api";
 
 const { width } = Dimensions.get("window");
 
@@ -32,20 +34,38 @@ const SignUp = () => {
       Alert.alert("Error", "Passwords do not match!");
       return;
     }
-
+  
     setLoading(true);
     try {
       const userCredential = await auth().createUserWithEmailAndPassword(form.email, form.password);
       const user = userCredential.user;
-
+  
+      // ✅ Create User in MongoDB
+      await api.createUser({
+        firebaseUID: user.uid,
+        name: form.name,
+        email: form.email,
+        photoURL: user.photoURL || '',
+        medicalHistory: {
+          conditions: [],
+          medications: [],
+          allergies: [],
+          lastUpdate: new Date()
+        }
+      });
+  
+      // ✅ Save to AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify({
+        uid: user.uid,
+        name: form.name,
+        email: form.email,
+      }));
+  
       if (user) {
-        await user.sendEmailVerification(); // ✅ Send email verification
-        Alert.alert(
-          "Verify Your Email",
-          "A verification email has been sent. Please verify before logging in."
-        );
-        auth().signOut(); // ✅ Force sign-out until email is verified
-        router.replace("/sign-in"); // ✅ Redirect to sign-in page
+        await user.sendEmailVerification();
+        Alert.alert("Verify Your Email", "A verification email has been sent.");
+        auth().signOut();
+        router.replace("/sign-in");
       }
     } catch (error: any) {
       Alert.alert("Registration failed", error.message);
