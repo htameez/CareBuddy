@@ -4,7 +4,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 
-1. Install iOS simulator or Android emulator:
+1. Setup and install iOS simulator and/or Android emulator:
 
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
@@ -15,15 +15,33 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Open simulator or emulator
+2. Open split terminal and navigate to backend folder
 
-3. Start a prebuild
+   ```bash
+   cd backend
+   ```
+
+3. Install dependencies for backend server
+
+   ```bash
+   npm install
+   ```
+
+4. Start backend server
+
+   ```bash
+   node server.js
+   ```
+
+5. Open simulator and/or emulator
+
+6. Start a prebuild in first terminal
 
    ```bash
     npx expo prebuild
    ```
 
-4. Run on iOS or Android
+7. Run on iOS and/or Android
 
    ```bash
     npx expo run:ios
@@ -32,15 +50,6 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
 ## Learn more
 
