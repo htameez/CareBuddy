@@ -10,6 +10,7 @@ import { Link, router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../backend/services/api";
+import images from "../../constants/images"; 
 
 const { width } = Dimensions.get("window");
 
@@ -48,6 +49,18 @@ const SignIn = () => {
 
   return (
     <View className="flex-1 relative">
+      {/* ✅ CareBuddy Mascot */}
+      <Image
+        source={images.carebuddyUpright}
+        style={{
+          position: "absolute",
+          width: "170%",
+          bottom: "12%",
+          alignSelf: "center"
+        }}
+        resizeMode="contain"
+      />
+
       <LinearGradient
         colors={["#3389BB", "rgba(35, 105, 146, 0.12)", "rgba(51, 137, 187, 0.00)"]}
         locations={[0, 0.7763, 1]}
