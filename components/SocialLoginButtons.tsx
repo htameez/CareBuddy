@@ -5,6 +5,9 @@ import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
 import icons from "../constants/icons";
 import axios from 'axios';
+import { Platform } from 'react-native';
+
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
 
 // ✅ Configure Google Sign-In
 GoogleSignin.configure({
@@ -17,39 +20,29 @@ const SocialLoginButtons: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn(); // ✅ Returns SignInResponse
-
-      // ✅ Get the ID token correctly from `user.idToken`
+      const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
-      if (!idToken) {
-        throw new Error("Google authentication failed - No ID token received.");
-      }
 
-      // ✅ Create Google credential
+      if (!idToken) throw new Error("Google authentication failed - No ID token received.");
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
       const user = userCredential.user;
-
-      // ✅ Fetch the Firebase Auth Token
       const firebaseToken = await user.getIdToken();
 
-      // ✅ Send User Info to Backend with Auth Header
-      await axios.post('http://localhost:5001/api/users', {
+      await axios.post(`${BASE_URL}/users`, {
         firebaseUID: user.uid,
         name: user.displayName,
         email: user.email,
       }, {
-        headers: {
-          Authorization: `Bearer ${firebaseToken}`,  // ✅ Correct Token Header
-        },
+        headers: { Authorization: `Bearer ${firebaseToken}` },
       });
 
       router.replace("/home");
-
-    } catch (error : any) {
+    } catch (error: any) {
       Alert.alert("Error", `Google Sign-In failed: ${error.message}`);
     }
   };
+
 
   return (
     <View className="flex-row justify-center items-center mt-4" style={{ gap: 33 }}>

@@ -1,18 +1,16 @@
-// backend/services/api.js
 import axios from 'axios';
 import auth from '@react-native-firebase/auth';
+import { Platform } from 'react-native';
 
-const BASE_URL = 'http://localhost:5001/api'; // ✅ Correct Backend URL
+// ✅ Automatically detect correct URL based on platform
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
 
 export const api = {
-  // ✅ Fetch User from MongoDB
   getUser: async (firebaseUID) => {
     try {
       const token = await auth().currentUser?.getIdToken(true);
       const response = await axios.get(`${BASE_URL}/users/${firebaseUID}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ Secure Request
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
     } catch (error) {
@@ -21,14 +19,11 @@ export const api = {
     }
   },
 
-  // ✅ Create or Update User in MongoDB
   createUser: async (userData) => {
     try {
       const token = await auth().currentUser?.getIdToken(true);
       const response = await axios.post(`${BASE_URL}/users`, userData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
     } catch (error) {
