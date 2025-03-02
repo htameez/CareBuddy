@@ -10,7 +10,7 @@ import { Link, router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../backend/services/api";
-import images from "../../constants/images"; 
+import images from "../../constants/images";
 
 const { width } = Dimensions.get("window");
 
@@ -29,17 +29,32 @@ const SignIn = () => {
     try {
       const userCredential = await auth().signInWithEmailAndPassword(form.email, form.password);
       const user = userCredential.user;
-  
+
+      if (!user.emailVerified) {
+        auth().signOut();
+        alert("Please verify your email before logging in.");
+        return;
+      }
+
       // ✅ Fetch User Data from MongoDB
       const userData = await api.getUser(user.uid);
-  
-      // ✅ Save to AsyncStorage for Quick Access
+
+      // ✅ Save user data to AsyncStorage for quick access
       if (userData) {
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        await AsyncStorage.setItem("user", JSON.stringify(userData));
       }
-  
-      await AsyncStorage.setItem("onboardingCompleted", "true");
-      router.replace("/home");
+
+      // ✅ Check if user is new or has not connected EHR
+      const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
+      const hasEHRConnected = userData?.ehr?.epicPatientID ? true : false;
+
+      if (isNewUser || !hasEHRConnected) {
+        console.log("🔹 Redirecting user to connect EHR...");
+        router.replace("/connect-ehr");
+      } else {
+        await AsyncStorage.setItem("onboardingCompleted", "true");
+        router.replace("/home");
+      }
     } catch (e: any) {
       alert("Sign in failed: " + e.message);
     } finally {

@@ -10,6 +10,32 @@ import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
+export const linking = {
+  prefixes: ["carebuddy://"],
+  config: {
+    screens: {
+      index: "index",
+      "(auth)": {
+        screens: {
+          signIn: "sign-in",
+          signUp: "sign-up",
+          "connect-ehr": "connect-ehr", // User starts Epic login here
+          "ehr-callback": "ehr-callback", // Only navigates here after login
+        },
+      },
+      "(tabs)": {
+        screens: {
+          home: "home",
+          chats: "chats",
+          favorites: "favorites",
+          settings: "settings",
+        },
+      },
+    },
+  },
+};
+
+
 const RootLayout = () => {
   const [fontsLoaded, error] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins/Poppins-Black.ttf"),
@@ -48,83 +74,91 @@ const RootLayout = () => {
         await AsyncStorage.removeItem("onboardingCompleted");
         console.log("🔄 Dev Mode: Reset onboarding state.");
       }
-  
+
       const hasCompleted = await AsyncStorage.getItem("onboardingCompleted");
       setOnboardingCompleted(hasCompleted === "true");
     };
-  
+
     checkOnboarding();
-  }, []);  
+  }, []);
 
-// ✅ Listen for authentication state changes
-useEffect(() => {
-  const subscriber = auth().onAuthStateChanged((user) => {
-    if (user) {
-      setUser(user);
-      setIsNewUser(user.metadata.creationTime === user.metadata.lastSignInTime);
-    } else {
-      setUser(null);
-      setIsNewUser(false);
-    }
-    if (initializing) setInitializing(false);
-  });
-
-  return subscriber;
-}, []);
-
-// ✅ Delay navigation to avoid "navigate before mounting" error
-useEffect(() => {
-  if (initializing || onboardingCompleted === null) return;
-
-  const inAuthGroup = segments[0] === "(auth)";
-
-  setTimeout(async () => {
-    if (!onboardingCompleted) {
-      return; // ✅ Stay on onboarding (`index.tsx`)
-    } 
-    
-    if (user) {
-      if (isNewUser) {
-        await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Save onboarding state
-        router.replace("/home"); // ✅ Redirect new users to home
-      } else if (!user.emailVerified) {
-        auth().signOut();
-        router.replace("/sign-in");
-        alert("Please verify your email before logging in.");
+  // ✅ Listen for authentication state changes
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+        setIsNewUser(user.metadata.creationTime === user.metadata.lastSignInTime);
       } else {
-        await AsyncStorage.setItem("onboardingCompleted", "true"); // ✅ Ensure onboarding is marked complete
-        router.replace("/home"); // ✅ Redirect authenticated users to home
+        setUser(null);
+        setIsNewUser(false);
       }
-    } else if (!user && !inAuthGroup) {
-      router.replace("/sign-in"); // ✅ Redirect logged-out users to sign-in
-    }
-  }, 500);
-}, [user, initializing, isNewUser, onboardingCompleted]);
+      if (initializing) setInitializing(false);
+    });
 
-// ✅ Show loading screen while checking auth state
-if (!fontsLoaded || initializing || onboardingCompleted === null) {
+    return subscriber;
+  }, []);
+
+  useEffect(() => {
+    if (initializing || onboardingCompleted === null) return;
+  
+    const inAuthGroup = segments[0] === "(auth)";
+  
+    setTimeout(async () => {
+      if (!onboardingCompleted) {
+        return; // ✅ Stay on onboarding (`index.tsx`)
+      }
+  
+      if (user) {
+        if (!user.emailVerified) {
+          auth().signOut();
+          router.replace("/sign-in");
+          alert("Please verify your email before logging in.");
+          return;
+        }
+  
+        // ✅ Retrieve user data from AsyncStorage
+        const userData = await AsyncStorage.getItem("user");
+        const userJSON = userData ? JSON.parse(userData) : null;
+        const hasEHRConnected = userJSON?.ehr?.epicPatientID ? true : false;
+  
+        // ✅ Redirect new users or those without EHR to `/connect-ehr`
+        if (isNewUser || !hasEHRConnected) {
+          console.log("🔹 Redirecting user to connect EHR...");
+          router.replace("/connect-ehr");
+        } else {
+          await AsyncStorage.setItem("onboardingCompleted", "true");
+          router.replace("/home");
+        }
+      } else if (!user && !inAuthGroup) {
+        router.replace("/sign-in");
+      }
+    }, 500);
+  }, [user, initializing, isNewUser, onboardingCompleted]);  
+
+  // ✅ Show loading screen while checking auth state
+  if (!fontsLoaded || initializing || onboardingCompleted === null) {
+    return (
+      <View className="flex-1 justify-center items-center bg-black">
+        <ActivityIndicator size="large" color="white" />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 justify-center items-center bg-black">
-      <ActivityIndicator size="large" color="white" />
-    </View>
+    <GradientBackground>
+      <Stack
+        screenOptions={{
+          contentStyle: {
+            backgroundColor: "transparent",
+          },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </GradientBackground>
   );
-}
-
-return (
-  <GradientBackground>
-    <Stack
-      screenOptions={{
-        contentStyle: {
-          backgroundColor: "transparent",
-        },
-      }}
-    >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
-  </GradientBackground>
-);
 };
 
 export default RootLayout;

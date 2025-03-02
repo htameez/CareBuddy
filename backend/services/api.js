@@ -31,4 +31,23 @@ export const api = {
       throw error;
     }
   },
+
+  updateUserEHR: async (firebaseUID, ehrData) => {
+    try {
+      const token = await auth().currentUser?.getIdToken(true); // 🔐 Get Firebase token
+
+      const response = await axios.put(
+        `${BASE_URL}/users/${firebaseUID}/ehr`, // 🔹 API endpoint for EHR update
+        { ehr: ehrData },
+        {
+          headers: { Authorization: `Bearer ${token}` }, // 🔐 Secure request
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error updating user EHR data:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 };

@@ -30,6 +30,18 @@ const AuthLayout = () => {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="connect-ehr"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="ehr-callback"
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack>
 
         {/* ✅ Glow Effect Positioned Behind Everything */}

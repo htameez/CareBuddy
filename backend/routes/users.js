@@ -40,6 +40,27 @@ router.get('/:firebaseUID', authenticate, async (req, res) => {
   }
 });
 
+// 🔹 Update User EHR Data (Protected)
+router.put("/:firebaseUID/ehr", authenticate, async (req, res) => {
+  try {
+    const { firebaseUID } = req.params;
+    const { ehr } = req.body;
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUID },
+      { $set: { ehr, "ehr.ehrLastSynced": new Date() } },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error updating user EHR data:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ✅ DELETE User from Firebase Auth and MongoDB
 router.delete('/:firebaseUID', async (req, res) => {
     const { firebaseUID } = req.params;
