@@ -1,45 +1,46 @@
 import { View, Text, Button, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import FHIR from "fhirclient";
+import { authorize } from "react-native-app-auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authConfig } from "../../backend/config/authConfig";
 
-const MELDRX_WORKSPACE_URL = process.env.EXPO_PUBLIC_MELDRX_WORKSPACE_URL ?? "";
-const MELDRX_CLIENT_ID = process.env.EXPO_PUBLIC_MELDRX_CLIENT_ID ?? "";
-const REDIRECT_URL = process.env.EXPO_PUBLIC_REDIRECT_URL ?? "";
+const ConnectEHR = () => {
+    const router = useRouter();
 
-export default function ConnectEHR() {
-  const router = useRouter();
+    const onLaunchClick = async () => {
+        try {
+            console.log("🔹 Opening Epic login...");
+            console.log(`🛠 MELDRX_WORKSPACE_URL: ${authConfig.workspaceUrl}`);
+            console.log(`🛠 MELDRX_CLIENT_ID: ${authConfig.clientId}`);
+            console.log(`🛠 REDIRECT_URL: ${authConfig.redirectUrl}`);
 
-  // ✅ Ensure environment variables are loaded correctly
-  console.log("🛠 MELDRX_WORKSPACE_URL:", MELDRX_WORKSPACE_URL);
-  console.log("🛠 MELDRX_CLIENT_ID:", MELDRX_CLIENT_ID);
-  console.log("🛠 REDIRECT_URL:", REDIRECT_URL);
+            // ✅ Ensure the correct format
+            const config = {
+                issuer: authConfig.workspaceUrl, // ✅ REQUIRED
+                clientId: authConfig.clientId,
+                redirectUrl: authConfig.redirectUrl,
+                scopes: authConfig.scope, // ✅ Array format is correct
+                serviceConfiguration: {
+                    authorizationEndpoint: `${authConfig.workspaceUrl}/authorize`,
+                    tokenEndpoint: `${authConfig.workspaceUrl}/token`,
+                    revocationEndpoint: `${authConfig.workspaceUrl}/revoke`,
+                },
+            };
 
-  const handleConnect = async () => {
-    try {
-      if (!MELDRX_WORKSPACE_URL || !MELDRX_CLIENT_ID || !REDIRECT_URL) {
-        Alert.alert("Error", "Missing environment variables. Check .env file.");
-        return;
-      }
+            const authState = await authorize(config);
 
-      console.log("🔹 Initiating Epic login...");
+            console.log("✅ Successfully authenticated!", authState);
+        } catch (error) {
+            console.error("❌ Error launching Epic login:", error);
+        }
+    };
 
-      // ✅ Construct Epic login URL using FHIR OAuth2
-      FHIR.oauth2.authorize({
-        clientId: MELDRX_CLIENT_ID,
-        scope: "openid fhirUser profile launch/patient user/*.read patient/*.*",
-        redirectUri: REDIRECT_URL,
-        iss: MELDRX_WORKSPACE_URL, // Base URL of FHIR API
-      });
-    } catch (error) {
-      console.error("Error opening Epic login:", error);
-      Alert.alert("Error", "Failed to open Epic login.");
-    }
-  };
+    return (
+        <View className="flex-1 justify-center items-center">
+            <Text className="text-xl font-bold">Connect Your EHR</Text>
+            <Button title="Connect with Epic" onPress={onLaunchClick} />
+        </View>
+    );
+};
 
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>Connect Your EHR</Text>
-      <Button title="Connect with Epic" onPress={handleConnect} />
-    </View>
-  );
-}
+export default ConnectEHR;
