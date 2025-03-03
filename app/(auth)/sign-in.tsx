@@ -11,6 +11,7 @@ import auth from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../backend/services/api";
 import images from "../../constants/images";
+import GradientBackground from "../../components/GradientBackground";
 
 const { width } = Dimensions.get("window");
 
@@ -63,103 +64,105 @@ const SignIn = () => {
   };
 
   return (
-    <View className="flex-1 relative">
-      {/* ✅ CareBuddy Mascot */}
-      <Image
-        source={images.carebuddyUpright}
-        style={{
-          position: "absolute",
-          width: "170%",
-          bottom: "12%",
-          alignSelf: "center"
-        }}
-        resizeMode="contain"
-      />
+    <GradientBackground>
+      <View className="flex-1 relative">
+        {/* ✅ CareBuddy Mascot */}
+        <Image
+          source={images.carebuddyUpright}
+          style={{
+            position: "absolute",
+            width: "170%",
+            bottom: "12%",
+            alignSelf: "center"
+          }}
+          resizeMode="contain"
+        />
 
-      <LinearGradient
-        colors={["#3389BB", "rgba(35, 105, 146, 0.12)", "rgba(51, 137, 187, 0.00)"]}
-        locations={[0, 0.7763, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={{
-          position: "absolute",
-          width: 237,
-          height: 544,
-          top: 0,
-          left: (width - 237) / 2,
-        }}
-      />
+        <LinearGradient
+          colors={["#3389BB", "rgba(35, 105, 146, 0.12)", "rgba(51, 137, 187, 0.00)"]}
+          locations={[0, 0.7763, 1]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{
+            position: "absolute",
+            width: 237,
+            height: 544,
+            top: 0,
+            left: (width - 237) / 2,
+          }}
+        />
 
-      <SafeAreaView className="flex-1">
-        <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="w-full flex-1 justify-between items-center h-full relative px-4">
-            <View className="w-full flex justify-start items-center pt-[10px]">
-              <Text className="font-psemibold text-white text-[36px]">Login</Text>
-              <Text className="font-iregular text-white text-[16px] pt-[4px]">
-                Please Log In to Continue
-              </Text>
-            </View>
-
-            <View className="w-full flex items-center justify-end gap-y-5 pb-[12%]">
-              <FormField
-                placeholder="Email"
-                value={form.email}
-                handleChangeText={(e) => setForm({ ...form, email: e })}
-                otherStyles="w-[90%]"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                icon={icons.user}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()} // ✅ Move to password field
-                blurOnSubmit={false}
-              />
-
-              <FormField
-                placeholder="Password"
-                value={form.password}
-                handleChangeText={(e) => setForm({ ...form, password: e })}
-                otherStyles="w-[90%]"
-                secureTextEntry
-                icon={icons.lock}
-                ref={passwordRef}
-                returnKeyType="done"
-                onSubmitEditing={signIn} // ✅ Submit on return
-              />
-
-              {loading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <View className="w-[90%]">
-                  <Text
-                    onPress={signIn}
-                    className="text-center text-lg font-psemibold text-white bg-primaryLight py-3 rounded-lg"
-                  >
-                    Log In
-                  </Text>
-                </View>
-              )}
-
-              <View className="flex-row items-center w-full justify-center mt-6">
-                <View className="w-[21.5%] h-[1px] bg-white" />
-                <Text className="text-white text-lg font-iregular mx-3">Or Log In With</Text>
-                <View className="w-[21.5%] h-[1px] bg-white" />
-              </View>
-
-              <SocialLoginButtons />
-
-              <View className="flex justify-center pt-4 flex-row gap-2">
-                <Text className="text-lg text-white font-pregular">
-                  Don't have an account?
+        <SafeAreaView className="flex-1">
+          <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View className="w-full flex-1 justify-between items-center h-full relative px-4">
+              <View className="w-full flex justify-start items-center pt-[10px]">
+                <Text className="font-psemibold text-white text-[36px]">Login</Text>
+                <Text className="font-iregular text-white text-[16px] pt-[4px]">
+                  Please Log In to Continue
                 </Text>
-                <Link href="/sign-up" className="text-lg font-psemibold text-white">
-                  Register
-                </Link>
+              </View>
+
+              <View className="w-full flex items-center justify-end gap-y-5 pb-[12%]">
+                <FormField
+                  placeholder="Email"
+                  value={form.email}
+                  handleChangeText={(e) => setForm({ ...form, email: e })}
+                  otherStyles="w-[90%]"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  icon={icons.user}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()} // ✅ Move to password field
+                  blurOnSubmit={false}
+                />
+
+                <FormField
+                  placeholder="Password"
+                  value={form.password}
+                  handleChangeText={(e) => setForm({ ...form, password: e })}
+                  otherStyles="w-[90%]"
+                  secureTextEntry
+                  icon={icons.lock}
+                  ref={passwordRef}
+                  returnKeyType="done"
+                  onSubmitEditing={signIn} // ✅ Submit on return
+                />
+
+                {loading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <View className="w-[90%]">
+                    <Text
+                      onPress={signIn}
+                      className="text-center text-lg font-psemibold text-white bg-primaryLight py-3 rounded-lg"
+                    >
+                      Log In
+                    </Text>
+                  </View>
+                )}
+
+                <View className="flex-row items-center w-full justify-center mt-6">
+                  <View className="w-[21.5%] h-[1px] bg-white" />
+                  <Text className="text-white text-lg font-iregular mx-3">Or Log In With</Text>
+                  <View className="w-[21.5%] h-[1px] bg-white" />
+                </View>
+
+                <SocialLoginButtons />
+
+                <View className="flex justify-center pt-4 flex-row gap-2">
+                  <Text className="text-lg text-white font-pregular">
+                    Don't have an account?
+                  </Text>
+                  <Link href="/sign-up" className="text-lg font-psemibold text-white">
+                    Register
+                  </Link>
+                </View>
               </View>
             </View>
-          </View>
-        </KeyboardAwareScrollView>
-      </SafeAreaView>
-    </View>
+          </KeyboardAwareScrollView>
+        </SafeAreaView>
+      </View>
+    </GradientBackground>
   );
 };
 

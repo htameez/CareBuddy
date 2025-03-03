@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from "../../backend/services/api";
 import auth from '@react-native-firebase/auth';
-import LinearGradient from 'react-native-linear-gradient';
+//import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import images from "../../constants/images";
 import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
@@ -120,12 +120,12 @@ const Home = () => {
                     </Text>
                   </Animated.View>
                   <Animated.View style={[styles.baymaxContainer, mascotAnimatedStyle]}>
-                    <LinearGradient
+                    {/* <LinearGradient
                       colors={['rgba(217, 217, 217, 0.20)', 'rgba(217, 217, 217, 0.00)']}
                       start={{ x: 1, y: 0 }}
                       end={{ x: 0, y: 0 }}
                       style={styles.ellipseBackground}
-                    />
+                    /> */}
                     <Image
                       source={images.carebuddyLeftWave}
                       style={styles.carebuddyImage}

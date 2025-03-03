@@ -12,6 +12,7 @@ import Animated, {
 import { useEffect } from "react";
 import images from "../constants/images";
 import ArrowButton from "../components/ArrowButton/ArrowButton"; // Adjust path if needed
+import GradientBackground from "../components/GradientBackground";
 
 const { height, width } = Dimensions.get("window");
 
@@ -83,46 +84,48 @@ const App: React.FC = () => {
   }));
 
   return (
-    <View className="flex-1 relative">
-      <SafeAreaView className="flex-1">
-        <ScrollView contentContainerStyle={{ height: "100%" }}>
-          <View className="w-full flex justify-start items-center h-full relative">
-            <Text className="font-psemibold text-white text-3xl pt-10">Welcome to CareBuddy</Text>
+    <GradientBackground>
+      <View className="flex-1 relative">
+        <SafeAreaView className="flex-1">
+          <ScrollView contentContainerStyle={{ height: "100%" }}>
+            <View className="w-full flex justify-start items-center h-full relative">
+              <Text className="font-psemibold text-white text-3xl pt-10">Welcome to CareBuddy</Text>
 
-            <View className="w-full h-3/5 max-h-[400px] items-end pr-8 pt-16 md:pt-24">
-              <Animated.View style={animatedStyle1}>
-                <Image source={images.message1} className="w-72 h-24 mb-4" resizeMode="contain" />
-              </Animated.View>
-              <Animated.View style={animatedStyle2}>
-                <Image source={images.message2} className="w-72 h-24 mb-4" resizeMode="contain" />
-              </Animated.View>
-              <Animated.View style={animatedStyle3}>
-                <Image source={images.message3} className="w-72 h-24" resizeMode="contain" />
-              </Animated.View>
+              <View className="w-full h-3/5 max-h-[400px] items-end pr-8 pt-16 md:pt-24">
+                <Animated.View style={animatedStyle1}>
+                  <Image source={images.message1} className="w-72 h-24 mb-4" resizeMode="contain" />
+                </Animated.View>
+                <Animated.View style={animatedStyle2}>
+                  <Image source={images.message2} className="w-72 h-24 mb-4" resizeMode="contain" />
+                </Animated.View>
+                <Animated.View style={animatedStyle3}>
+                  <Image source={images.message3} className="w-72 h-24" resizeMode="contain" />
+                </Animated.View>
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+          </ScrollView>
+        </SafeAreaView>
 
-      {/* ✅ Glow Animation */}
-      <Animated.View style={[animatedGlow, { height: height * 0.4 }]} className="absolute bottom-0 left-0 right-0">
-        <Image source={images.glow} className="w-full h-full" resizeMode="cover" />
-      </Animated.View>
+        {/* ✅ Glow Animation */}
+        <Animated.View style={[animatedGlow, { height: height * 0.4 }]} className="absolute bottom-0 left-0 right-0">
+          <Image source={images.glow} className="w-full h-full" resizeMode="cover" />
+        </Animated.View>
 
-      {/* ✅ Animated Mascot from Right to Bottom Left */}
-      <Animated.View style={[animatedMascotStyle, { position: "absolute", bottom: "10%", left: 0 }]}>
-        <Image
-          source={images.carebuddyRightWave}
-          style={{ width: 500, height: 500, right: "33%" }}
-          resizeMode="contain"
-        />
-      </Animated.View>
+        {/* ✅ Animated Mascot from Right to Bottom Left */}
+        <Animated.View style={[animatedMascotStyle, { position: "absolute", bottom: "10%", left: 0 }]}>
+          <Image
+            source={images.carebuddyRightWave}
+            style={{ width: 500, height: 500, right: "33%" }}
+            resizeMode="contain"
+          />
+        </Animated.View>
 
-      {/* ✅ Animated Button Slide-In */}
-      <Animated.View style={animatedButtonStyle} className="absolute bottom-40 right-10">
-        <ArrowButton text="Get Started" handlePress={finishOnboarding} isDisabled={false} />
-      </Animated.View>
-    </View>
+        {/* ✅ Animated Button Slide-In */}
+        <Animated.View style={animatedButtonStyle} className="absolute bottom-40 right-10">
+          <ArrowButton text="Get Started" handlePress={finishOnboarding} isDisabled={false} />
+        </Animated.View>
+      </View>
+    </GradientBackground>
   );
 };
 

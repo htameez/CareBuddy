@@ -1,45 +1,24 @@
-import { View, Text, Button, Alert } from "react-native";
-import { useRouter } from "expo-router";
-import { authorize } from "react-native-app-auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authConfig } from "../../backend/config/authConfig";
+import { View, Text, Button, Linking } from "react-native";
+import GradientBackground from "../../components/GradientBackground";
 
 const ConnectEHR = () => {
-    const router = useRouter();
+    const onLaunchClick = () => {
+        console.log("🔹 Opening EHR processing page in Safari...");
+        const ehrCallbackUrl = "http://localhost:8081/ehr-callback"; // ✅ Open localhost on web
 
-    const onLaunchClick = async () => {
-        try {
-            console.log("🔹 Opening Epic login...");
-            console.log(`🛠 MELDRX_WORKSPACE_URL: ${authConfig.workspaceUrl}`);
-            console.log(`🛠 MELDRX_CLIENT_ID: ${authConfig.clientId}`);
-            console.log(`🛠 REDIRECT_URL: ${authConfig.redirectUrl}`);
-
-            // ✅ Ensure the correct format
-            const config = {
-                issuer: authConfig.workspaceUrl, // ✅ REQUIRED
-                clientId: authConfig.clientId,
-                redirectUrl: authConfig.redirectUrl,
-                scopes: authConfig.scope, // ✅ Array format is correct
-                serviceConfiguration: {
-                    authorizationEndpoint: `${authConfig.workspaceUrl}/authorize`,
-                    tokenEndpoint: `${authConfig.workspaceUrl}/token`,
-                    revocationEndpoint: `${authConfig.workspaceUrl}/revoke`,
-                },
-            };
-
-            const authState = await authorize(config);
-
-            console.log("✅ Successfully authenticated!", authState);
-        } catch (error) {
-            console.error("❌ Error launching Epic login:", error);
-        }
+        // ✅ Open Safari with the EHR processing page
+        Linking.openURL(ehrCallbackUrl).catch((err) =>
+            console.error("❌ Error launching EHR callback page:", err)
+        );
     };
 
     return (
-        <View className="flex-1 justify-center items-center">
-            <Text className="text-xl font-bold">Connect Your EHR</Text>
-            <Button title="Connect with Epic" onPress={onLaunchClick} />
-        </View>
+        <GradientBackground>
+            <View className="flex-1 justify-center items-center">
+                <Text className="font-psemibold text-white text-[36px] mb-6">Connect Your EHR</Text>
+                <Button title="Connect with Epic" onPress={onLaunchClick} />
+            </View>
+        </GradientBackground>
     );
 };
 
