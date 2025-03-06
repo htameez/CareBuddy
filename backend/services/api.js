@@ -1,9 +1,13 @@
-import axios from 'axios';
-import auth from '@react-native-firebase/auth';
-import { Platform } from 'react-native';
+import axios from "axios";
+import auth from "@react-native-firebase/auth";
+import { Platform } from "react-native";
 
 // ✅ Automatically detect correct URL based on platform
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
+const BASE_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:5001/api"
+    : "http://localhost:5001/api";
+const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
 export const api = {
   getUser: async (firebaseUID) => {
@@ -14,7 +18,10 @@ export const api = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching user info:', error.response?.data || error.message);
+      console.error(
+        "Error fetching user info:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -27,7 +34,10 @@ export const api = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error creating user:', error.response?.data || error.message);
+      console.error(
+        "Error creating user:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -46,8 +56,33 @@ export const api = {
 
       return response.data;
     } catch (error) {
-      console.error("❌ Error updating user EHR data:", error.response?.data || error.message);
+      console.error(
+        "❌ Error updating user EHR data:",
+        error.response?.data || error.message
+      );
       throw error;
+    }
+  },
+
+  sendChatMessage: async (firebaseUID, messages) => {
+    try {
+        if (!firebaseUID || !messages || messages.length === 0) {
+            throw new Error("❌ Missing required fields: firebaseUID or messages");
+        }
+
+        const token = await auth().currentUser?.getIdToken(true);
+        const response = await axios.post(
+            `${BASE_URL}/chat`,
+            { firebaseUID, messages },
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+
+        return response.data.response;
+    } catch (error) {
+        console.error("❌ Error sending chat message:", error.response?.data || error.message);
+        return "I'm having trouble processing your request.";
     }
   },
 };

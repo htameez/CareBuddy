@@ -1,25 +1,40 @@
-import { View, Text, Button, Linking } from "react-native";
+import { useEffect } from "react";
+import { View, Text } from "react-native";
+import FHIR from "fhirclient";
+import { authConfig } from "../../backend/config/authConfig";
 import GradientBackground from "../../components/GradientBackground";
 
-const ConnectEHR = () => {
-    const onLaunchClick = () => {
-        console.log("🔹 Opening EHR processing page in Safari...");
-        const ehrCallbackUrl = "http://localhost:8081/ehr-callback"; // ✅ Open localhost on web
+export default function ConnectEHR() {
+    useEffect(() => {
+        const startEpicAuth = async () => {
+            try {
+                console.log("🔹 Starting FHIR Authorization in the web browser...");
+                console.log(`🛠 MELDRX_WORKSPACE_URL: ${authConfig.workspaceUrl}`);
+                console.log(`🛠 MELDRX_CLIENT_ID: ${authConfig.clientId}`);
+                console.log(`🛠 REDIRECT_URL: ${authConfig.redirectUrl}`);
 
-        // ✅ Open Safari with the EHR processing page
-        Linking.openURL(ehrCallbackUrl).catch((err) =>
-            console.error("❌ Error launching EHR callback page:", err)
-        );
-    };
+                // ✅ Start FHIR OAuth2 Authentication
+                await FHIR.oauth2.authorize({
+                    clientId: authConfig.clientId,
+                    scope: authConfig.scope,
+                    redirectUri: authConfig.redirectUrl, // Redirects to ehr-callback
+                    iss: authConfig.workspaceUrl,
+                });
+
+            } catch (error) {
+                console.error("❌ Error launching Epic login:", error);
+            }
+        };
+
+        startEpicAuth();
+    }, []);
 
     return (
         <GradientBackground>
             <View className="flex-1 justify-center items-center">
-                <Text className="font-psemibold text-white text-[36px] mb-6">Connect Your EHR</Text>
-                <Button title="Connect with Epic" onPress={onLaunchClick} />
+                <Text className="text-lg text-white font-pregular">Redirecting to Epic...</Text>
             </View>
         </GradientBackground>
     );
-};
+}
 
-export default ConnectEHR;

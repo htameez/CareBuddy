@@ -51,7 +51,7 @@ const SignIn = () => {
 
       if (isNewUser || !hasEHRConnected) {
         console.log("🔹 Redirecting user to connect EHR...");
-        router.replace("/connect-ehr");
+        router.replace("/home"); //change to connect-ehr
       } else {
         await AsyncStorage.setItem("onboardingCompleted", "true");
         router.replace("/home");

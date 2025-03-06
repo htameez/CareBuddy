@@ -74,15 +74,28 @@ const Home = () => {
     getUserInfo();
   }, []);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
-    setMessages((prev) => [...prev, { text: messageInput.trim(), isUser: true }]);
+
+    const userMessage = { text: messageInput.trim(), isUser: true };
+    setMessages((prev) => [...prev, userMessage]);
     setMessageInput("");
     setIsChatting(true);
 
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    // Send message to backend AI chatbot
+    try {
+      const firebaseUID = await AsyncStorage.getItem("user_id");
+      const aiResponse = await api.sendChatMessage(firebaseUID, [{ role: "user", content: messageInput.trim() }]);
+
+      const botMessage = { text: aiResponse, isUser: false };
+      setMessages((prev) => [...prev, botMessage]);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error("Error communicating with chatbot:", error);
+    }
   };
 
   const handleNewChat = () => {
