@@ -28,7 +28,13 @@ const AuthLayout = () => {
             headerShown: false,
           }}
         />
-        {/* <Stack.Screen
+        <Stack.Screen
+          name="ConnectEhr"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="connect-ehr"
           options={{
             headerShown: false,
@@ -39,7 +45,7 @@ const AuthLayout = () => {
           options={{
             headerShown: false,
           }}
-        /> */}
+        />
       </Stack>
 
       {/* ✅ Glow Effect Positioned Behind Everything */}

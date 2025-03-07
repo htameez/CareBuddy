@@ -12,6 +12,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../backend/services/api";
 import images from "../../constants/images";
 import GradientBackground from "../../components/GradientBackground";
+import { Linking } from "react-native"; // ✅ Import Linking
+import * as WebBrowser from "expo-web-browser";
+import { useAuthRequest } from "expo-auth-session";
 
 const { width } = Dimensions.get("window");
 
@@ -39,19 +42,26 @@ const SignIn = () => {
 
       // ✅ Fetch User Data from MongoDB
       const userData = await api.getUser(user.uid);
-
-      // ✅ Save user data to AsyncStorage for quick access
+      await AsyncStorage.setItem("user_id", user.uid);
       if (userData) {
         await AsyncStorage.setItem("user", JSON.stringify(userData));
       }
 
-      // ✅ Check if user is new or has not connected EHR
+      // ✅ Check if user needs to connect EHR
       const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
       const hasEHRConnected = userData?.ehr?.epicPatientID ? true : false;
 
       if (isNewUser || !hasEHRConnected) {
-        console.log("🔹 Redirecting user to connect EHR...");
-        router.replace("/home"); //change to connect-ehr
+        console.log("🔹 Opening in-app browser for EHR authentication...");
+
+        const ehrAuthUrl = "http://localhost:8081/ConnectEhr";
+
+        const result = await WebBrowser.openAuthSessionAsync(ehrAuthUrl, "carebuddy://ehr-callback");
+
+        if (result.type === "success" && result.url.includes("localhost:8081/ehr-callback")) {
+          console.log("✅ Detected EHR Callback, proceeding...");
+          router.replace("/ehr-callback"); // ✅ Handle token exchange
+        }
       } else {
         await AsyncStorage.setItem("onboardingCompleted", "true");
         router.replace("/home");

@@ -1,5 +1,8 @@
 const axios = require("axios");
-require("dotenv").config();
+const dotenv = require("dotenv");
+
+// ✅ Load environment variables
+dotenv.config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
@@ -7,21 +10,23 @@ const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 // ✅ Generate chatbot response using OpenAI API
 const generateChatResponse = async (messages) => {
   try {
+    console.log("🔹 Loaded API Key:", OPENAI_API_KEY); // Debugging
     if (!OPENAI_API_KEY) {
-      throw new Error("Missing OpenAI API key");
+      throw new Error("❌ Missing OpenAI API key");
     }
 
     // ✅ Ensure messages array exists
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      throw new Error("Invalid messages format");
+      throw new Error("❌ Invalid messages format");
     }
 
     // ✅ Make API request to OpenAI
     const response = await axios.post(
       OPENAI_API_URL,
       {
-        model: "gpt-4",
-        messages: messages, // Send structured chat messages with user context
+        model: "gpt-4-turbo",
+        messages: messages,
+        temperature: 0.7,
       },
       {
         headers: {
@@ -35,7 +40,7 @@ const generateChatResponse = async (messages) => {
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error("❌ Chatbot error:", error.response?.data || error.message);
-    throw new Error("Failed to process chat message.");
+    throw new Error("❌ Failed to process chat message.");
   }
 };
 

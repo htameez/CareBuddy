@@ -1,36 +1,28 @@
-import { View, Text, Button, Linking } from "react-native";
-import GradientBackground from "../../components/GradientBackground";
-import { useEffect } from "react";
+import { View, Text, Button } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
 const ConnectEHR = () => {
     const router = useRouter();
 
-    useEffect(() => {
-        const checkIfUserNeedsEHR = async () => {
-            const hasEHRConnected = await AsyncStorage.getItem("ehr_access_token");
-            if (!hasEHRConnected) {
-                console.log("🔹 Redirecting to Connect EHR page in Safari...");
-                const ehrConnectUrl = "http://localhost:8081/connect-ehr";
+    const connectEHR = async () => {
+        console.log("🔹 Opening EHR authentication popup...");
+        const ehrConnectUrl = "http://localhost:8081/connect-ehr";
 
-                // ✅ Open Safari with the Connect EHR page
-                Linking.openURL(ehrConnectUrl).catch((err) =>
-                    console.error("❌ Error launching Connect EHR page:", err)
-                );
-            }
-        };
+        const result = await WebBrowser.openAuthSessionAsync(ehrConnectUrl, "localhost:8081/ehr-callback");
 
-        checkIfUserNeedsEHR();
-    }, []);
+        if (result.type === "success" && result.url.includes("localhost:8081/ehr-callback")) {
+            console.log("✅ Detected EHR Callback, proceeding...");
+            router.replace("/ehr-callback"); // ✅ Handle token exchange
+        }
+    };
 
     return (
-        <GradientBackground>
-            <View className="flex-1 justify-center items-center">
-                <Text className="font-psemibold text-white text-[36px] mb-6">Connect Your EHR</Text>
-                <Button title="Manually Connect" onPress={() => Linking.openURL("http://localhost:8081/connect-ehr")} />
-            </View>
-        </GradientBackground>
+        <View className="flex-1 justify-center items-center">
+            <Text className="font-psemibold text-white text-[36px] mb-6">Connect Your EHR</Text>
+            <Button title="Connect Now" onPress={connectEHR} />
+        </View>
     );
 };
 

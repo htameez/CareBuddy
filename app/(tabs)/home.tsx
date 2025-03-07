@@ -82,10 +82,33 @@ const Home = () => {
     setMessageInput("");
     setIsChatting(true);
 
-    // Send message to backend AI chatbot
     try {
-      const firebaseUID = await AsyncStorage.getItem("user_id");
-      const aiResponse = await api.sendChatMessage(firebaseUID, [{ role: "user", content: messageInput.trim() }]);
+      // ✅ Ensure `firebaseUID` is properly retrieved
+      let firebaseUID = await AsyncStorage.getItem("user_id");
+
+      // 🔹 Fallback: If `user_id` is missing, get it from the stored user object
+      if (!firebaseUID) {
+        console.warn("⚠️ firebaseUID not found in AsyncStorage. Fetching from user object...");
+        const storedUser = await AsyncStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          firebaseUID = parsedUser?.uid || null;
+        }
+      }
+
+      // ❌ If still missing, alert and return
+      if (!firebaseUID) {
+        console.error("❌ firebaseUID is missing in AsyncStorage");
+        alert("User ID not found. Please log in again.");
+        return;
+      }
+
+      console.log("🔹 Sending chat message for user:", firebaseUID);
+
+      // ✅ Format the messages properly
+      const messagesArray = [{ role: "user", content: messageInput.trim() }];
+
+      const aiResponse = await api.sendChatMessage(firebaseUID, messagesArray);
 
       const botMessage = { text: aiResponse, isUser: false };
       setMessages((prev) => [...prev, botMessage]);
@@ -94,7 +117,7 @@ const Home = () => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error) {
-      console.error("Error communicating with chatbot:", error);
+      console.error("❌ Error communicating with chatbot:", error);
     }
   };
 

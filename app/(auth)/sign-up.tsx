@@ -32,48 +32,49 @@ const SignUp = () => {
   // ✅ Sign-Up Function
   const handleSignUp = async () => {
     if (form.password !== form.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match!");
-      return;
+        Alert.alert("Error", "Passwords do not match!");
+        return;
     }
 
     setLoading(true);
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(form.email, form.password);
-      const user = userCredential.user;
+        const userCredential = await auth().createUserWithEmailAndPassword(form.email, form.password);
+        const user = userCredential.user;
 
-      // ✅ Create User in MongoDB
-      await api.createUser({
-        firebaseUID: user.uid,
-        name: form.name,
-        email: form.email,
-        photoURL: user.photoURL || '',
-        medicalHistory: {
-          conditions: [],
-          medications: [],
-          allergies: [],
-          lastUpdate: new Date()
+        // ✅ Create User in MongoDB
+        await api.createUser({
+            firebaseUID: user.uid,
+            name: form.name,
+            email: form.email,
+            photoURL: user.photoURL || '',
+            medicalHistory: {
+                conditions: [],
+                medications: [],
+                allergies: [],
+                lastUpdate: new Date()
+            }
+        });
+
+        // ✅ Store Firebase UID in AsyncStorage correctly
+        await AsyncStorage.setItem("user_id", user.uid);
+        await AsyncStorage.setItem("user", JSON.stringify({
+            uid: user.uid,
+            name: form.name,
+            email: form.email,
+        }));
+
+        if (user) {
+            await user.sendEmailVerification();
+            Alert.alert("Verify Your Email", "A verification email has been sent.");
+            auth().signOut();
+            router.replace("/sign-in");
         }
-      });
-
-      // ✅ Save to AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify({
-        uid: user.uid,
-        name: form.name,
-        email: form.email,
-      }));
-
-      if (user) {
-        await user.sendEmailVerification();
-        Alert.alert("Verify Your Email", "A verification email has been sent.");
-        auth().signOut();
-        router.replace("/sign-in");
-      }
-    } catch (error: any) {
-      Alert.alert("Registration failed", error.message);
+    } catch (error : any) {
+        Alert.alert("Registration failed", error.message);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   return (
     <GradientBackground>

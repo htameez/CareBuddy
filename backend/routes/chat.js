@@ -11,14 +11,14 @@ router.post("/", authMiddleware, async (req, res) => {
     const { firebaseUID, messages } = req.body;
 
     if (!firebaseUID || !messages) {
-      return res.status(400).json({ message: "Missing required fields." });
+      return res.status(400).json({ message: "❌ Missing required fields." });
     }
 
     // ✅ Retrieve user's EHR data from MongoDB
     const user = await User.findOne({ firebaseUID });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: "❌ User not found." });
     }
 
     // ✅ Structure user medical data for RAG
@@ -45,7 +45,7 @@ router.post("/", authMiddleware, async (req, res) => {
     res.json({ response: aiResponse });
   } catch (error) {
     console.error("❌ Error processing chatbot request:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "❌ Internal Server Error" });
   }
 });
 

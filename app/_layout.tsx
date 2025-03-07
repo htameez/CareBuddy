@@ -1,5 +1,4 @@
 import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
-import GradientBackground from "../components/GradientBackground";
 import { useFonts } from "expo-font";
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Platform, StatusBar } from "react-native";

@@ -1,118 +1,131 @@
 import { useEffect } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Alert, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import FHIR from "fhirclient";
-import { api } from "../../backend/services/api"; // API service for MongoDB updates
+import { api } from "../../backend/services/api";
 import GradientBackground from "../../components/GradientBackground";
-import { authConfig } from "../../backend/config/authConfig";
+import { authConfig } from "@/backend/config/authConfig";
+import { fetchEHRData } from "@/backend/services/ehrService"; // ✅ Import fetchEHRData
 
-const MELDRX_WORKSPACE_URL = process.env.EXPO_PUBLIC_MELDRX_WORKSPACE_URL ?? "";
-
-export default function EhrCallback() {
+export default function EHRCallback() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
     useEffect(() => {
-        const processEpicLogin = async () => {
+        const processEHRLogin = async () => {
             try {
-                console.log("🔹 Starting FHIR Authorization in the web browser...");
-                
-                console.log(`🛠 MELDRX_WORKSPACE_URL: ${authConfig.workspaceUrl}`);
-                console.log(`🛠 MELDRX_CLIENT_ID: ${authConfig.clientId}`);
-                console.log(`🛠 REDIRECT_URL: ${authConfig.redirectUrl}`);
+                console.log("🔹 Processing EHR Login...");
+        
+                // ✅ Extract Authorization Code
+                const authCode = Array.isArray(params.code) ? params.code[0] : params.code;
+                if (!authCode) throw new Error("❌ Missing authorization code.");
+                console.log("✅ Authorization Code:", authCode);
+        
+                // ✅ Retrieve Code Verifier from AsyncStorage
+                const codeVerifier = await AsyncStorage.getItem("code_verifier");
+                if (!codeVerifier) throw new Error("❌ Missing code_verifier from storage.");
+                console.log("✅ Code Verifier:", codeVerifier);
+        
+                // ✅ Ensure Scope, Client ID, and Redirect URI are Set
+                if (!authConfig.scope) throw new Error("❌ Missing required scope.");
+                if (!authConfig.clientId) throw new Error("❌ Missing client ID.");
+                if (!authConfig.redirectUrl) throw new Error("❌ Missing redirect URI.");
+        
+                console.log("✅ Scope:", authConfig.scope);
+                console.log("✅ Client ID:", authConfig.clientId);
+                console.log("✅ Redirect URI:", authConfig.redirectUrl);
+        
+                // ✅ Construct Token Exchange Request
+                const requestBody = new URLSearchParams();
+                requestBody.append("code", authCode);
+                requestBody.append("grant_type", "authorization_code");
+                requestBody.append("scope", authConfig.scope);
+                requestBody.append("code_verifier", codeVerifier);
+                requestBody.append("client_id", authConfig.clientId);
+                requestBody.append("redirect_uri", authConfig.redirectUrl);
+        
+                // ✅ Send Request to Token Endpoint
+                console.log("🔹 Sending token exchange request...");
+                const tokenResponse = await axios.post(
+                    "https://app.meldrx.com/connect/token",
+                    requestBody,
+                    {
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "Accept": "application/json",
+                        },
+                    }
+                );
+        
+                // ✅ Extract and Store Access Token
+                const accessToken = tokenResponse.data.access_token;
+                if (!accessToken) throw new Error("❌ No access token received.");
+                console.log("✅ Access Token Received:", accessToken);
+                await AsyncStorage.setItem("ehr_access_token", accessToken);
 
-                // ✅ Launch FHIR OAuth2
-                await FHIR.oauth2.authorize({
-                    clientId: authConfig.clientId,
-                    scope: authConfig.scope,
-                    redirectUri: authConfig.redirectUrl, // Should be http://localhost:8081/ehr-callback
-                    iss: authConfig.workspaceUrl,
-                });
-
-                console.log("🔹 Processing Epic login callback...");
-
-                // ✅ Retrieve the Epic client instance
-                const client = await FHIR.oauth2.ready();
-
-                if (!client) {
-                    Alert.alert("Error", "Failed to retrieve Epic client session.");
-                    return;
+                // ✅ Store Additional Tokens if Available
+                if (tokenResponse.data.refresh_token) {
+                    await AsyncStorage.setItem("ehr_refresh_token", tokenResponse.data.refresh_token);
+                    console.log("🔹 Refresh Token stored.");
+                }
+                if (tokenResponse.data.id_token) {
+                    await AsyncStorage.setItem("ehr_id_token", tokenResponse.data.id_token);
+                    console.log("🔹 ID Token stored.");
                 }
 
-                console.log("✅ FHIR Client loaded:", client);
+                // ✅ Fetch EHR Data
+                console.log("🔹 Fetching EHR data...");
+                const ehrData = await fetchEHRData();
+                if (!ehrData) {
+                    throw new Error("❌ Failed to fetch EHR data.");
+                }
+                console.log("✅ EHR Data Retrieved:", ehrData);
 
-                // ✅ Store tokens securely
-                await AsyncStorage.setItem("ehr_access_token", client.state.tokenResponse?.access_token ?? "");
-                await AsyncStorage.setItem("ehr_id_token", client.state.tokenResponse?.id_token ?? "");
-
-                console.log("🔹 Tokens saved successfully!");
-
-                // ✅ Fetch Patient Data
-                const headers = { Authorization: `Bearer ${client.state.tokenResponse?.access_token}` };
-                const patientResponse = await axios.get(`${MELDRX_WORKSPACE_URL}/Patient`, { headers });
-                const patient = patientResponse.data.entry?.[0]?.resource;
-
-                console.log("✅ Patient FHIR Data:", patient);
-
-                const medicalHistory = {
-                    conditions: [],
-                    medications: [],
-                    allergies: [],
-                    demographics: {
-                        birthDate: patient?.birthDate || "",
-                        gender: patient?.gender || "",
-                        ethnicity: patient?.extension?.find((ext: { url: string | string[] }) => ext.url.includes("ethnicity"))?.valueString || "",
-                    },
-                    clinicalNotes: [],
-                };
-
-                // ✅ Fetch medical conditions
-                const conditionsResponse = await axios.get(`${MELDRX_WORKSPACE_URL}/Condition?patient=${patient?.id}`, { headers });
-                medicalHistory.conditions = conditionsResponse.data.entry?.map((c: { resource: { code: { text: any } } }) => c.resource.code.text) || [];
-
-                // ✅ Fetch medications
-                const medicationsResponse = await axios.get(`${MELDRX_WORKSPACE_URL}/MedicationRequest?patient=${patient?.id}`, { headers });
-                medicalHistory.medications = medicationsResponse.data.entry?.map((m: { resource: { medicationCodeableConcept: { text: any } } }) => m.resource.medicationCodeableConcept?.text) || [];
-
-                // ✅ Fetch allergies
-                const allergiesResponse = await axios.get(`${MELDRX_WORKSPACE_URL}/AllergyIntolerance?patient=${patient?.id}`, { headers });
-                medicalHistory.allergies = allergiesResponse.data.entry?.map((a: { resource: { code: { text: any } } }) => a.resource.code.text) || [];
-
-                // ✅ Fetch clinical notes (DocumentReference)
-                const notesResponse = await axios.get(`${MELDRX_WORKSPACE_URL}/DocumentReference?patient=${patient?.id}`, { headers });
-                medicalHistory.clinicalNotes = notesResponse.data.entry?.map((n: { resource: { date: any; text: { div: string } } }) => ({
-                    date: n.resource.date,
-                    note: n.resource.text?.div?.replace(/<[^>]+>/g, ""), // Remove HTML tags
-                })) || [];
-
-                // ✅ Store Patient Data in MongoDB
+                // ✅ Get User ID from AsyncStorage
                 const userId = await AsyncStorage.getItem("user_id");
+                if (!userId) {
+                    throw new Error("❌ No user ID found.");
+                }
+
+                // ✅ Store EHR Data in MongoDB
+                console.log("🔹 Storing EHR data in MongoDB...");
                 await api.updateUserEHR(userId, {
-                    epicPatientID: patient?.id,
-                    medicalHistory,
-                    ehrLastSynced: new Date(),
+                    ehr: {
+                        epicPatientID: ehrData.patientID,
+                        ehrLastSynced: new Date(),
+                        medicalHistory: {
+                            conditions: ehrData.conditions,
+                            medications: ehrData.medications,
+                            allergies: ehrData.allergies,
+                            demographics: ehrData.demographics,
+                            clinicalNotes: ehrData.clinicalNotes,
+                        },
+                    },
                 });
 
                 console.log("✅ MongoDB updated successfully!");
 
-                // ✅ Deep link back to mobile app
-                window.location.href = "carebuddy://home";
-            } catch (error) {
-                console.error("Error processing Epic login:", error);
-                Alert.alert("Error", "Failed to fetch EHR data.");
-            }
-        };
+                // ✅ Redirect to Home Page
+                console.log("🔹 Redirecting to Home...");
+                router.replace("/home");
 
-        processEpicLogin();
+            } catch (error: any) {
+                console.error("❌ Token Request Error:", error.response?.status, error.response?.data);
+                Alert.alert("Error", "Failed to retrieve access token.");
+            }
+        };        
+
+        processEHRLogin();
     }, []);
 
     return (
         <GradientBackground>
             <View className="flex-1 justify-center items-center">
-                <Text className="text-lg text-white font-pregular">Loading...</Text>
+                <ActivityIndicator size="large" color="white" />
+                <Text className="text-lg text-white font-pregular mt-4">
+                    Connecting your health records...
+                </Text>
             </View>
         </GradientBackground>
     );
