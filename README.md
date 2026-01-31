@@ -43,14 +43,14 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 6. Start a prebuild in first terminal
 
    ```bash
-    npx expo prebuild
+   npx expo prebuild
    ```
 
 7. Run on iOS and/or Android
 
    ```bash
-    npx expo run:ios
-    npx expo run:android
+   npx expo run:ios
+   npx expo run:android
    ```
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
