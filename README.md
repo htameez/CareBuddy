@@ -2,6 +2,11 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Prerequisites:
+
+1. Homebrew
+2. npm
+
 ## Get started
 
 1. Setup and install iOS simulator and/or Android emulator:
