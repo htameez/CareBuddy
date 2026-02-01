@@ -1,51 +1,80 @@
 const express = require("express");
-const { generateChatResponse } = require("../services/openaiService");
+const { generateChatResponse } = require("../services/azureOpenAI");
 const User = require("../models/User.js");
 const authMiddleware = require("../utils/authMiddleware.js");
 
 const router = express.Router();
 
-// ✅ Fetch user data and generate chatbot response
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { firebaseUID, messages } = req.body;
 
-    if (!firebaseUID || !messages) {
-      return res.status(400).json({ message: "❌ Missing required fields." });
+    if (!firebaseUID) {
+      return res.status(400).json({ message: "❌ Missing firebaseUID." });
+    }
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ message: "❌ Messages must be a non-empty array." });
     }
 
-    // ✅ Retrieve user's EHR data from MongoDB
-    const user = await User.findOne({ firebaseUID });
+    const user = await User.findOne({ firebaseUID }).lean();
 
     if (!user) {
       return res.status(404).json({ message: "❌ User not found." });
     }
 
-    // ✅ Structure user medical data for RAG
-    const userContext = `
-      Name: ${user.name}
-      Gender: ${user.ehr?.demographics?.gender || "Unknown"}
-      Age: ${user.ehr?.demographics?.birthDate || "Unknown"}
-      Medical Conditions: ${user.ehr?.medicalHistory?.conditions.join(", ") || "None"}
-      Medications: ${user.ehr?.medicalHistory?.medications.join(", ") || "None"}
-      Allergies: ${user.ehr?.medicalHistory?.allergies.join(", ") || "None"}
-      Clinical Notes: ${user.ehr?.medicalHistory?.clinicalNotes.map(n => `${n.date}: ${n.note}`).join("\n") || "None"}
-    `;
+    const gender = user?.ehr?.demographics?.gender ?? "Unknown";
+    const birthDate = user?.ehr?.demographics?.birthDate ?? "Unknown";
 
-    // ✅ Append user context to messages
+    const conditions = Array.isArray(user?.ehr?.medicalHistory?.conditions)
+      ? user.ehr.medicalHistory.conditions
+      : [];
+
+    const medications = Array.isArray(user?.ehr?.medicalHistory?.medications)
+      ? user.ehr.medicalHistory.medications
+      : [];
+
+    const allergies = Array.isArray(user?.ehr?.medicalHistory?.allergies)
+      ? user.ehr.medicalHistory.allergies
+      : [];
+
+    const clinicalNotesArr = Array.isArray(user?.ehr?.medicalHistory?.clinicalNotes)
+      ? user.ehr.medicalHistory.clinicalNotes
+      : [];
+
+    const clinicalNotes = clinicalNotesArr.length
+      ? clinicalNotesArr
+          .map((n) => `${n?.date ?? "Unknown date"}: ${n?.note ?? ""}`.trim())
+          .filter(Boolean)
+          .join("\n")
+      : "None";
+
+    const userContext = `
+Name: ${user?.name ?? "Unknown"}
+Gender: ${gender}
+Birth date: ${birthDate}
+Medical Conditions: ${conditions.length ? conditions.join(", ") : "None"}
+Medications: ${medications.length ? medications.join(", ") : "None"}
+Allergies: ${allergies.length ? allergies.join(", ") : "None"}
+Clinical Notes:
+${clinicalNotes}
+    `.trim();
+
     const chatMessages = [
-      { role: "system", content: "You are a healthcare assistant with access to the user's medical history." },
+      {
+        role: "system",
+        content:
+          "You are a healthcare assistant. Use the user's medical context when relevant. If information is missing, ask clarifying questions. Do not invent diagnoses.",
+      },
       { role: "user", content: userContext },
       ...messages,
     ];
 
-    // ✅ Generate AI response
     const aiResponse = await generateChatResponse(chatMessages);
 
-    res.json({ response: aiResponse });
+    return res.json({ response: aiResponse });
   } catch (error) {
-    console.error("❌ Error processing chatbot request:", error);
-    res.status(500).json({ message: "❌ Internal Server Error" });
+    console.error("❌ Error processing chatbot request:", error?.response?.data || error?.message || error);
+    return res.status(500).json({ message: "❌ Internal Server Error" });
   }
 });
 

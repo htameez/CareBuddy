@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const OPENAI_API_URL = "https://carebuddy-resource.cognitiveservices.azure.com/openai/responses?api-version=2025-04-01-preview"; //"https://api.openai.com/v1/chat/completions"
 
 // ✅ Generate chatbot response using OpenAI API
 const generateChatResponse = async (messages) => {
@@ -24,7 +24,7 @@ const generateChatResponse = async (messages) => {
     const response = await axios.post(
       OPENAI_API_URL,
       {
-        model: "gpt-4-turbo",
+        model: "gpt-5.2-chat",
         messages: messages,
         temperature: 0.7,
       },
