@@ -47,12 +47,12 @@
         "expo-build-properties",
         {
           "ios": {
-            "userFrameworks": "static"
+            "userFrameworks": "dynamic"
           }
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/auth"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -83,18 +83,14 @@ const Home = () => {
     setIsChatting(true);
 
     try {
-      // ✅ Ensure `firebaseUID` is properly retrieved
-      let firebaseUID = await AsyncStorage.getItem("user_id");
+      const firebaseUID = auth().currentUser?.uid;
 
-      // 🔹 Fallback: If `user_id` is missing, get it from the stored user object
       if (!firebaseUID) {
-        console.warn("⚠️ firebaseUID not found in AsyncStorage. Fetching from user object...");
-        const storedUser = await AsyncStorage.getItem("user");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          firebaseUID = parsedUser?.uid || null;
-        }
+        console.error("❌ No current Firebase user. Please log in again.");
+        alert("Session expired. Please log in again.");
+        return;
       }
+
 
       // ❌ If still missing, alert and return
       if (!firebaseUID) {

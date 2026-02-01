@@ -39,3 +39,8 @@ user
 
 app-example
 backend/firebase-service-account.json
+
+# Expo
+.expo
+dist/
+web-build/
