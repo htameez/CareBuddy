@@ -2,6 +2,11 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Prerequisites:
+
+1. Homebrew
+2. npm
+
 ## Get started
 
 1. Setup and install iOS simulator and/or Android emulator:
@@ -38,14 +43,14 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 6. Start a prebuild in first terminal
 
    ```bash
-    npx expo prebuild
+   npx expo prebuild
    ```
 
 7. Run on iOS and/or Android
 
    ```bash
-    npx expo run:ios
-    npx expo run:android
+   npx expo run:ios
+   npx expo run:android
    ```
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
