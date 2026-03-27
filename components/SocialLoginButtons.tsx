@@ -1,13 +1,11 @@
 import { View, Image, TouchableOpacity, Alert } from "react-native";
 import React from "react";
-import { GoogleSignin, statusCodes, User } from "@react-native-google-signin/google-signin";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth from "@react-native-firebase/auth";
 import { useRouter } from "expo-router";
 import icons from "../constants/icons";
-import axios from 'axios';
-import { Platform } from 'react-native';
-
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../backend/services/api";
 
 // ✅ Configure Google Sign-In
 GoogleSignin.configure({
@@ -27,17 +25,24 @@ const SocialLoginButtons: React.FC = () => {
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
       const user = userCredential.user;
-      const firebaseToken = await user.getIdToken();
+      const firebaseToken = await user.getIdToken(true);
 
-      await axios.post(`${BASE_URL}/users`, {
+      const savedUser = await api.createUser({
         firebaseUID: user.uid,
-        name: user.displayName,
-        email: user.email,
-      }, {
-        headers: { Authorization: `Bearer ${firebaseToken}` },
-      });
+        name: user.displayName || "CareBuddy User",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+      }, firebaseToken);
 
-      router.replace("/home");
+      await AsyncStorage.setItem("user_id", user.uid);
+      await AsyncStorage.setItem("user", JSON.stringify(savedUser));
+
+      if (savedUser?.ehr?.epicPatientID) {
+        await AsyncStorage.setItem("onboardingCompleted", "true");
+        router.replace("/home");
+      } else {
+        router.replace("/connect-ehr");
+      }
     } catch (error: any) {
       Alert.alert("Error", `Google Sign-In failed: ${error.message}`);
     }

@@ -2,6 +2,7 @@ const express = require("express");
 const { generateChatResponse } = require("../services/azureOpenAI");
 const User = require("../models/User.js");
 const authMiddleware = require("../utils/authMiddleware.js");
+const { buildRagContext } = require("../services/retrievalService");
 
 const router = express.Router();
 
@@ -22,56 +23,46 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "❌ User not found." });
     }
 
-    const gender = user?.ehr?.demographics?.gender ?? "Unknown";
-    const birthDate = user?.ehr?.demographics?.birthDate ?? "Unknown";
-
-    const conditions = Array.isArray(user?.ehr?.medicalHistory?.conditions)
-      ? user.ehr.medicalHistory.conditions
-      : [];
-
-    const medications = Array.isArray(user?.ehr?.medicalHistory?.medications)
-      ? user.ehr.medicalHistory.medications
-      : [];
-
-    const allergies = Array.isArray(user?.ehr?.medicalHistory?.allergies)
-      ? user.ehr.medicalHistory.allergies
-      : [];
-
-    const clinicalNotesArr = Array.isArray(user?.ehr?.medicalHistory?.clinicalNotes)
-      ? user.ehr.medicalHistory.clinicalNotes
-      : [];
-
-    const clinicalNotes = clinicalNotesArr.length
-      ? clinicalNotesArr
-          .map((n) => `${n?.date ?? "Unknown date"}: ${n?.note ?? ""}`.trim())
-          .filter(Boolean)
-          .join("\n")
-      : "None";
-
-    const userContext = `
-Name: ${user?.name ?? "Unknown"}
-Gender: ${gender}
-Birth date: ${birthDate}
-Medical Conditions: ${conditions.length ? conditions.join(", ") : "None"}
-Medications: ${medications.length ? medications.join(", ") : "None"}
-Allergies: ${allergies.length ? allergies.join(", ") : "None"}
-Clinical Notes:
-${clinicalNotes}
-    `.trim();
+    const { query, promptContext, retrieval } = buildRagContext(user, messages);
 
     const chatMessages = [
       {
         role: "system",
         content:
-          "You are a healthcare assistant. Use the user's medical context when relevant. If information is missing, ask clarifying questions. Do not invent diagnoses.",
+          "You are CareBuddy, a healthcare assistant inside the CareBuddy app. Refer to yourself as CareBuddy, not ChatGPT or OpenAI, unless the user directly asks about the underlying model. Do not reintroduce yourself in every reply. Do not repeatedly greet the user or repeat the user's name unless it is clearly useful in that specific response. Answer directly and naturally. Use only the retrieved patient context when describing chart-specific facts. If information is missing, say so and ask clarifying questions. Do not invent diagnoses. Distinguish patient-record facts from general educational guidance. Never infer race, ethnicity, nationality, religion, or other sensitive attributes unless they are explicitly stated in the retrieved patient context. If those attributes are not explicitly present, say they are unknown or not specified in the chart.",
       },
-      { role: "user", content: userContext },
+      {
+        role: "user",
+        content: `${promptContext}\n\nPatient question:\n${query}`,
+      },
       ...messages,
     ];
 
     const aiResponse = await generateChatResponse(chatMessages);
 
-    return res.json({ response: aiResponse });
+    await User.updateOne(
+      { firebaseUID },
+      {
+        $push: {
+          chatHistory: {
+            timestamp: new Date(),
+            message: query,
+            response: aiResponse,
+          },
+        },
+      }
+    );
+
+    return res.json({
+      response: aiResponse,
+      retrievedContext: retrieval.ranked.map((item) => ({
+        label: item.label,
+        type: item.type,
+        date: item.date,
+        text: item.text,
+        score: item.score,
+      })),
+    });
   } catch (error) {
     console.error("❌ Error processing chatbot request:", error?.response?.data || error?.message || error);
     return res.status(500).json({ message: "❌ Internal Server Error" });

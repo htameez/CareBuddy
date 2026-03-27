@@ -5,7 +5,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // ✅ Function to generate a secure `code_verifier` (43–128 characters)
 const generateCodeVerifier = async () => {
     const randomBytes = Crypto.getRandomBytes(32); // Generates 32 random bytes
-    const codeVerifier = base64encode(randomBytes)  // Convert to Base64
+    const arrayBuffer = Uint8Array.from(randomBytes).buffer;
+    const codeVerifier = base64encode(
+        arrayBuffer
+    )  // Convert to Base64
         .replace(/[^a-zA-Z0-9-_]/g, "") // Make it URL-safe
         .substring(0, 128); // Ensure it's within RFC limits
 

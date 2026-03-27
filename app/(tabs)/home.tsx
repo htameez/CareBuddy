@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, Alert } from "react-native";
 import React, { useEffect, useState, useRef } from 'react';
 import GradientBackground from "../../components/GradientBackground";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,18 +16,138 @@ type Message = {
   isUser: boolean;
 };
 
+const renderInlineMarkdown = (text: string, textStyle: any, boldStyle: any) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <Text key={`bold-${index}`} style={[textStyle, boldStyle]}>
+          {part.slice(2, -2)}
+        </Text>
+      );
+    }
+
+    return (
+      <Text key={`plain-${index}`} style={textStyle}>
+        {part}
+      </Text>
+    );
+  });
+};
+
+const MarkdownMessage = ({ text, isUser }: { text: string; isUser: boolean }) => {
+  const lines = text.split("\n");
+
+  return (
+    <View>
+      {lines.map((line, index) => {
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          return <View key={`space-${index}`} style={styles.markdownSpacer} />;
+        }
+
+        if (trimmed.startsWith("### ")) {
+          return (
+            <Text key={`h3-${index}`} style={[styles.chatText, styles.markdownHeadingSmall]}>
+              {trimmed.slice(4)}
+            </Text>
+          );
+        }
+
+        if (trimmed.startsWith("## ")) {
+          return (
+            <Text key={`h2-${index}`} style={[styles.chatText, styles.markdownHeadingMedium]}>
+              {trimmed.slice(3)}
+            </Text>
+          );
+        }
+
+        if (trimmed.startsWith("# ")) {
+          return (
+            <Text key={`h1-${index}`} style={[styles.chatText, styles.markdownHeadingLarge]}>
+              {trimmed.slice(2)}
+            </Text>
+          );
+        }
+
+        if (/^[-*]\s+/.test(trimmed)) {
+          const bulletText = trimmed.replace(/^[-*]\s+/, "");
+
+          return (
+            <View key={`bullet-${index}`} style={styles.markdownBulletRow}>
+              <Text style={[styles.chatText, styles.markdownBulletGlyph]}>•</Text>
+              <Text style={[styles.chatText, styles.markdownBulletText]}>
+                {renderInlineMarkdown(bulletText, styles.chatText, styles.chatTextBold)}
+              </Text>
+            </View>
+          );
+        }
+
+        return (
+          <Text
+            key={`p-${index}`}
+            style={[
+              styles.chatText,
+              styles.markdownParagraph,
+              isUser ? styles.chatTextUser : null,
+            ]}
+          >
+            {renderInlineMarkdown(trimmed, styles.chatText, styles.chatTextBold)}
+          </Text>
+        );
+      })}
+    </View>
+  );
+};
+
+const MessageBubble = ({ msg }: { msg: Message }) => {
+  const [measuredWidth, setMeasuredWidth] = useState<number | undefined>(undefined);
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(800)}
+      style={[
+        styles.chatBubble,
+        msg.isUser ? styles.userBubble : styles.assistantBubble,
+        msg.isUser && measuredWidth ? { width: measuredWidth } : {},
+      ]}
+    >
+      {msg.isUser ? (
+        <Text
+          style={styles.chatText}
+          onTextLayout={(e) => {
+            const lines = e.nativeEvent.lines;
+            if (lines.length > 1) {
+              const maxLineWidth = Math.max(...lines.map((l) => l.width));
+              setMeasuredWidth(Math.ceil(maxLineWidth) + 20); // +20 for left+right padding
+            }
+          }}
+        >
+          {msg.text}
+        </Text>
+      ) : (
+        <MarkdownMessage text={msg.text} isUser={msg.isUser} />
+      )}
+    </Animated.View>
+  );
+};
+
 const Home = () => {
   const [fullName, setFullName] = useState("Guest");
   const [firstName, setFirstName] = useState("Guest");
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const textTranslateX = useSharedValue(-300);
   const textOpacity = useSharedValue(0);
   const mascotTranslateX = useSharedValue(300);
   const mascotOpacity = useSharedValue(0);
+  const contentOpacity = useSharedValue(1);
 
   const textAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: textTranslateX.value }],
@@ -37,6 +157,10 @@ const Home = () => {
   const mascotAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: mascotTranslateX.value }],
     opacity: mascotOpacity.value,
+  }));
+
+  const contentFadeStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
   }));
 
   useEffect(() => {
@@ -74,6 +198,19 @@ const Home = () => {
     getUserInfo();
   }, []);
 
+  useEffect(() => {
+    if (!isChatting || messages.length === 0) return;
+
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [messages, isChatting]);
+
+  const handleInputChange = (text: string) => {
+    setMessageInput(text);
+    contentOpacity.value = withTiming(text.length > 0 ? 0 : 1, { duration: 250, easing: Easing.out(Easing.ease) });
+  };
+
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
 
@@ -81,6 +218,7 @@ const Home = () => {
     setMessages((prev) => [...prev, userMessage]);
     setMessageInput("");
     setIsChatting(true);
+    contentOpacity.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
 
     try {
       const firebaseUID = auth().currentUser?.uid;
@@ -122,6 +260,24 @@ const Home = () => {
     setIsChatting(false);
   };
 
+  const handlePrintDebugAuth = async () => {
+    try {
+      const user = auth().currentUser;
+      if (!user) {
+        Alert.alert("No user", "No authenticated Firebase user is available.");
+        return;
+      }
+
+      const token = await user.getIdToken(true);
+      console.log("FIREBASE_UID", user.uid);
+      console.log("FIREBASE_ID_TOKEN", token);
+      Alert.alert("Auth logged", "Firebase UID and ID token were printed to the console.");
+    } catch (error) {
+      console.error("❌ Failed to print Firebase auth debug info:", error);
+      Alert.alert("Error", "Failed to print Firebase auth debug info.");
+    }
+  };
+
   return (
     <GradientBackground>
       <KeyboardAvoidingView
@@ -131,7 +287,7 @@ const Home = () => {
         <View style={styles.container}>
           <SafeAreaView style={{ flex: 1 }}>
             {!isChatting ? (
-              <View style={{ flex: 1 }}>
+              <Animated.View style={[{ flex: 1 }, contentFadeStyle]}>
                 <View style={styles.profileContainer}>
                   <Image source={require("../../assets/images/Home/Ellipse4.png")} style={styles.profileImage} />
                   <View>
@@ -166,9 +322,9 @@ const Home = () => {
                   </Animated.View>
                 </View>
                 <Text style={styles.helpText}>How can I help you?</Text>
-              </View>
+              </Animated.View>
             ) : (
-              <>
+              <View style={{ flex: 1 }}>
                 <TouchableOpacity onPress={handleNewChat} style={styles.newChatButton}>
                   <Text style={styles.newChatText}>+ New Chat</Text>
                 </TouchableOpacity>
@@ -176,33 +332,31 @@ const Home = () => {
                 <ScrollView
                   ref={scrollViewRef}
                   style={styles.chatContainer}
-                  contentContainerStyle={{ paddingBottom: 100 }}
-                  onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                  contentContainerStyle={styles.chatContentContainer}
+                  onContentSizeChange={() => {
+                    requestAnimationFrame(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    });
+                  }}
                 >
                   {messages.map((msg, index) => (
-                    <Animated.View
-                      key={index}
-                      entering={FadeIn.duration(800)}
-                      style={[
-                        styles.chatBubble,
-                        msg.isUser ? styles.userBubble : styles.assistantBubble,
-                      ]}
-                    >
-                      <Text style={styles.chatText}>{msg.text}</Text>
-                    </Animated.View>
+                    <MessageBubble key={index} msg={msg} />
                   ))}
                 </ScrollView>
-              </>
+              </View>
             )}
 
-            <View style={styles.fixedMessageInputContainer}>
+            <View style={[styles.fixedMessageInputContainer, isInputFocused && styles.inputContainerFocused]}>
               <TextInput
                 style={styles.messageInput}
                 placeholder="Message Me"
                 placeholderTextColor="#ccc"
                 value={messageInput}
-                onChangeText={setMessageInput}
+                onChangeText={handleInputChange}
                 onSubmitEditing={handleSendMessage}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                selectionColor="#65A844"
               />
               <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
                 <Text style={styles.arrowUp}>↑</Text>
@@ -230,7 +384,7 @@ const styles = StyleSheet.create({
   baymaxContainer: { position: 'absolute', left: '65%', top: '0.5%' },
   ellipseBackground: { position: 'absolute', width: 371, height: 400, borderRadius: 195 },
   carebuddyImage: { width: 700, height: 700, right: '25%', bottom: '16%', transform: [{ rotate: '-15deg' }] },
-  helpText: { fontSize: 24, fontFamily: 'Poppins-SemiBold', textAlign: 'center', color: "#fff", marginTop: '37%', marginBottom: '5%' },
+  helpText: { fontSize: 24, fontFamily: 'Poppins-SemiBold', textAlign: 'center', color: "#fff", marginTop: '25%'},
   fixedMessageInputContainer: {
     position: 'absolute',
     bottom: '13%',
@@ -242,6 +396,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 25,
     paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  inputContainerFocused: {
+    borderColor: '#65A844',
   },
   messageInput: { flex: 1, color: '#fff', fontSize: 16, fontFamily: 'Poppins-Medium' },
   sendButton: { backgroundColor: '#65A844', width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
@@ -249,8 +408,11 @@ const styles = StyleSheet.create({
   chatContainer: {
     flex: 1,
     marginVertical: 10,
-    marginBottom: 90,
-    overflow: 'hidden',
+    marginBottom: 130,
+  },
+  chatContentContainer: {
+    paddingBottom: 20,
+    flexGrow: 1,
   },
   chatBubble: {
     padding: 10,
@@ -261,9 +423,45 @@ const styles = StyleSheet.create({
   userBubble: { backgroundColor: '#00446e', alignSelf: 'flex-end' },
   assistantBubble: { backgroundColor: '#1d5b8f', alignSelf: 'flex-start' },
   chatText: { color: 'white', fontSize: 16, fontFamily: 'Inter-Regular' },
+  chatTextUser: { color: 'white' },
+  chatTextBold: { fontFamily: 'Poppins-SemiBold' },
+  markdownParagraph: { lineHeight: 24 },
+  markdownHeadingLarge: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 6,
+  },
+  markdownHeadingMedium: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 6,
+  },
+  markdownHeadingSmall: {
+    fontSize: 17,
+    lineHeight: 24,
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 4,
+  },
+  markdownBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  markdownBulletGlyph: {
+    width: 14,
+    lineHeight: 24,
+  },
+  markdownBulletText: {
+    flex: 1,
+    lineHeight: 24,
+  },
+  markdownSpacer: {
+    height: 8,
+  },
   newChatButton: { alignSelf: 'flex-end', padding: 10 },
   newChatText: { color: '#65A844', fontSize: 16, fontWeight: '600' },
 });
 
 export default Home;
-

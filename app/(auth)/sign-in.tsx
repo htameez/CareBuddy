@@ -12,10 +12,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../backend/services/api";
 import images from "../../constants/images";
 import GradientBackground from "../../components/GradientBackground";
-import { Linking } from "react-native"; // ✅ Import Linking
-import * as WebBrowser from "expo-web-browser";
-import { useAuthRequest } from "expo-auth-session";
-
 const { width } = Dimensions.get("window");
 
 const SignIn = () => {
@@ -52,16 +48,7 @@ const SignIn = () => {
       const hasEHRConnected = userData?.ehr?.epicPatientID ? true : false;
 
       if (isNewUser || !hasEHRConnected) {
-        console.log("🔹 Opening in-app browser for EHR authentication...");
-
-        const ehrAuthUrl = "http://localhost:8081/ConnectEhr";
-
-        const result = await WebBrowser.openAuthSessionAsync(ehrAuthUrl, "carebuddy://ehr-callback");
-
-        if (result.type === "success" && result.url.includes("localhost:8081/ehr-callback")) {
-          console.log("✅ Detected EHR Callback, proceeding...");
-          router.replace("/ehr-callback"); // ✅ Handle token exchange
-        }
+        router.replace("/connect-ehr");
       } else {
         await AsyncStorage.setItem("onboardingCompleted", "true");
         router.replace("/home");

@@ -3,9 +3,10 @@ import auth from "@react-native-firebase/auth";
 import { Platform } from "react-native";
 
 const BASE_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:5001/api"
-    : "http://localhost:5001/api";
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  (Platform.OS === "android"
+    ? "http://10.0.2.2:5000/api"
+    : "http://localhost:5000/api");
 
 export const api = {
   getUser: async (firebaseUID) => {
@@ -21,9 +22,9 @@ export const api = {
     }
   },
 
-  createUser: async (userData) => {
+  createUser: async (userData, tokenOverride) => {
     try {
-      const token = await auth().currentUser?.getIdToken(true);
+      const token = tokenOverride || await auth().currentUser?.getIdToken(true);
       const response = await axios.post(`${BASE_URL}/users`, userData, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -40,13 +41,61 @@ export const api = {
 
       const response = await axios.put(
         `${BASE_URL}/users/${firebaseUID}/ehr`,
-        { ehr: ehrData },
+        ehrData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       return response.data;
     } catch (error) {
       console.error("❌ Error updating user EHR data:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  updateUserProfile: async (firebaseUID, profileData) => {
+    try {
+      const token = await auth().currentUser?.getIdToken(true);
+      const response = await axios.put(
+        `${BASE_URL}/users/${firebaseUID}/profile`,
+        profileData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error updating user profile:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  syncRedoxEHR: async (firebaseUID, searchParams) => {
+    try {
+      const token = await auth().currentUser?.getIdToken(true);
+      const response = await axios.post(
+        `${BASE_URL}/users/${firebaseUID}/ehr/redox-sync`,
+        searchParams,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error syncing Redox EHR data:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  debugRedoxDocuments: async (firebaseUID, searchParams) => {
+    try {
+      const token = await auth().currentUser?.getIdToken(true);
+      const response = await axios.post(
+        `${BASE_URL}/users/${firebaseUID}/ehr/redox-documents-debug`,
+        searchParams,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error debugging Redox documents:", error.response?.data || error.message);
       throw error;
     }
   },

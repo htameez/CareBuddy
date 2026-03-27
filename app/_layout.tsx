@@ -4,10 +4,8 @@ import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Platform, StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ Track onboarding status
 import * as NavigationBar from "expo-navigation-bar";
-//import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import "../global.css";
-import { auth } from "../firebaseConfig";
-import { User } from "firebase/auth";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,7 +49,7 @@ const RootLayout = () => {
   });
 
   const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const router = useRouter();
@@ -85,7 +83,7 @@ const RootLayout = () => {
 
   // ✅ Listen for authentication state changes
   useEffect(() => {
-    const subscriber = auth.onAuthStateChanged((user) => {
+    const subscriber = auth().onAuthStateChanged((user) => {
       if (user) {
         setUser(user);
         setIsNewUser(user.metadata.creationTime === user.metadata.lastSignInTime);
@@ -111,7 +109,7 @@ const RootLayout = () => {
 
       if (user) {
         if (!user.emailVerified) {
-          auth.signOut();
+          auth().signOut();
           router.replace("/sign-in");
           alert("Please verify your email before logging in.");
           return;
@@ -161,4 +159,3 @@ const RootLayout = () => {
 };
 
 export default RootLayout;
-

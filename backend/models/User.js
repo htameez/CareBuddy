@@ -6,6 +6,12 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     photoURL: String,
+    profile: {
+      age: { type: Number, min: 0, max: 120 },
+      weight: { type: String, maxlength: 40 },
+      height: { type: String, maxlength: 20 },
+      healthGoals: { type: String, maxlength: 400 },
+    },
 
     // 🔹 Epic EHR Integration (Medical Data Only from Epic)
     ehr: {
